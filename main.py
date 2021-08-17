@@ -32,13 +32,14 @@ import discord
 from discord.ext import commands
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from KateLib import load_json_file, RandomSymbols, Logging
+from KateLib import load_json_file, RandomSymbols, Log
 from functools import wraps
 
 # Windows Development Fix
 # noinspection PyProtectedMember
 # Protected member is being patched as a bug fix.
 from asyncio.proactor_events import _ProactorBasePipeTransport
+
 
 # Big thanks to https://github.com/paaksing for this snippet!
 # https://github.com/aio-libs/aiohttp/issues/4324
@@ -48,6 +49,7 @@ from asyncio.proactor_events import _ProactorBasePipeTransport
 def silence_event_loop_closed(func):
     """ This code serves to fix a crash that specifically happens on windows due to the aiohttp
     library using a different underlying mechanism on windows. See issue 4324 for more information."""
+
     @wraps(func)
     def wrapper(self, *args, **kwargs):
         """Wraps the incoming function with an exception handler"""
@@ -57,17 +59,21 @@ def silence_event_loop_closed(func):
         except RuntimeError as e:
             if str(e) != 'Event loop is closed':
                 raise
+
     return wrapper
 
 
 if platform.system() == 'Windows':
     # Silence the exception here.
     _ProactorBasePipeTransport.__del__ = silence_event_loop_closed(_ProactorBasePipeTransport.__del__)
+
+
 # End Windows Development Fix
 
 
 class CustomHelp(commands.MinimalHelpCommand):
-    """# Custom Discord Help Command"""
+    """Custom Discord Help Command"""
+
     async def send_pages(self):
         """Modified send_pages sends the information in an embed"""
         channel = self.get_destination()
@@ -78,10 +84,11 @@ class CustomHelp(commands.MinimalHelpCommand):
 
 
 class KateBot(commands.Bot):
-    """# Discord.py Bot Extension"""
+    """Discord.py Bot Extension"""
+
     def __init__(self, Logger):
         # Create Dictionary from discord.json
-        config = load_json_file('config/discord.json')
+        config = load_json_file('config/discord.json', Logger)
         # Setup Gateway Intents
         intent = discord.Intents.default()
         intent.members = config['members_intent']
@@ -95,18 +102,20 @@ class KateBot(commands.Bot):
                               intents=intent)
         # Initialize additional objects
         self.token = config['token']
-        self.logging = Logger
-        self.logging.log('KateBot', "Initialized", verbose=True)
+        self.Log = Logger
+        self.log = self.Log.log
+        self.log('KateBot', "Initialized", self.Log.Type.verbose)
 
     async def on_ready(self):
-        """# Runs when successfully connected to Discord API"""
-        self.logging.log('Discord', f'Logged in as {self.user}! {RS.random_heart()}')
+        """Runs when successfully connected to Discord API"""
+        self.log('Discord', f'Logged in as {self.user}! {RS.random_heart()}', None)
 
     async def on_command_error(self, ctx, error):
-        """# Create Exception Handler for command errors"""
-        self.logging.log("Discord", f"{error}\n"
-                                    f" Author: [{ctx.author}]\n"
-                                    f" Channel: [{ctx.channel}]", error=True)
+        """Create Exception Handler for command errors"""
+        self.log("Discord", f"{error}\n"
+                            f" Author: [{ctx.author}]\n"
+                            f" Channel: [{ctx.channel}]",
+                            self.Log.Type.error)
 
 
 if __name__ == '__main__':
@@ -119,13 +128,13 @@ if __name__ == '__main__':
     session = Session()
 
     # Logging Setup
-    Log = Logging()
-    Log.debug = True
-    Log.verbose = True
-    Log.milliseconds = True
+    Logg = Log()
+    Logg.debug = True
+    Logg.verbose = True
+    Logg.milliseconds = True
 
     # KateBot Setup
-    KBot = KateBot(Log)
+    KBot = KateBot(Logg)
     KBot.help_command = CustomHelp()
     KBot.load_extension("cogs.reddit")
     KBot.load_extension("cogs.reaction_roles")
@@ -134,6 +143,3 @@ if __name__ == '__main__':
 
     # Entry Point
     KBot.run(KBot.token)
-
-
-

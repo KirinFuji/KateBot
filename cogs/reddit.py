@@ -28,11 +28,13 @@ from discord.ext import commands
 
 
 class RedditCog(commands.Cog):
+    """AsyncPraw Reddit Cog"""
     def __init__(self, KateBot):
         self.KateBot = KateBot
-        self.KateBot.logging.log("Cog.Reddit", "Initialized", verbose=True)
+        self.KateBot.Log.log("Cog.Reddit", "Initialized", self.KateBot.Log.Type.verbose)
         self.enabled = True
 
 
 def setup(KateBot):
+    """Create Cog object and add it to KateBot"""
     KateBot.add_cog(RedditCog(KateBot))

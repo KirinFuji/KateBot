@@ -30,12 +30,12 @@ from discord.ext import commands
 class TemplateCog(commands.Cog):
     def __init__(self, KateBot):
         self.KateBot = KateBot
-        self.KateBot.logging.log("TemplateCog", "Initialized", verbose=True, force=True)
+        self.KateBot.Log.log("TemplateCog", "Initialized", verbose=True, force=True)
 
     @commands.command(name="test2")
     # @commands.has_role("Mod")
     async def test2(self, ctx):
-        self.KateBot.logging.log("TemplateCog", "Initialized", verbose=True, force=True)
+        self.KateBot.Log.log("TemplateCog", "Initialized", verbose=True, force=True)
 
     @commands.Cog.listener()
     async def on_message(self, message):

@@ -25,55 +25,100 @@ SOFTWARE.
 """
 
 from json import load as load_json
+from os.path import isfile
 from random import randint
 from datetime import datetime
 from termcolor import colored
+from enum import Enum
 
 
 class RandomSymbols:
+    """Library of random Symbols :3"""
     def __init__(self):
         self.Hearts = ['❤', '🧡', '💛', '💚', '💙', '💜', '🤍']
 
     def random_heart(self):
+        """Why wouldn't you want random hears?"""
         return self.Hearts[randint(0, 6)]
 
 
-def load_json_file(filename):
-    with open(filename, 'r', encoding="utf8") as F:
-        return load_json(F)
+def load_json_file(filename, logger):
+    """Returns a dictionary from json file"""
+    exists = isfile(filename)
+    if not exists:
+        logger.log('KateLib', f"Error Loading Json:\n  -File: {filename}\n  -Valid: {exists}",
+                   logger.Type.error)
+    else:
+        logger.log('KateLib', f"Loading Json:\n  -File: {filename}\n  -Valid: {exists}",
+                   logger.Type.debug)
+        try:
+            with open(filename, 'r', encoding="utf8") as F:
+                return load_json(F)
+        except UnicodeEncodeError as err:
+            logger.log('KateLib', f"Error Loading Json:\n  -{err}", logger.Type.error)
 
 
-class Logging:
+
+
+
+class Log:
+    """Custom Logging Class"""
+
+    class Colors(Enum):
+        """Enum for logging class colors"""
+        grey = 'white',
+        blue = 'blue',
+        white = None,
+        yellow = 'yellow',
+        red = 'red'
+
+    class Type(Enum):
+        """Enum for logging class type"""
+        verbose = 0,
+        debug = 1,
+        normal = 2,
+        warning = 3,
+        error = 4,
+
     def __init__(self):
+        # Toggle log types
         self.verbose = False
         self.debug = False
+        self.normal = True
         self.warning = True
         self.error = True
-        self.normal = True
         self.enabled = True
         self.milliseconds = False
-        self.modules = []
 
     def timestamp(self):
+        """Create Constant Timestamp"""
         if self.milliseconds:
             return datetime.utcnow()
         else:
             return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
 
-    def log(self, module, message, verbose=False, warning=False, debug=False, error=False):
+    def log(self, module, message, log_type, tag="", color=None):
+        """Log an event to console (To DB in future)
+        """
+        if log_type is None:
+            log_type = self.Type.normal
         if self.enabled:
-            if self.debug and debug:
-                print(colored(f'[{self.timestamp()}][{module}][DEBUG]: {message}', 'blue'))
-                return
-            elif self.warning and warning:
-                print(colored(f'[{self.timestamp()}][{module}][WARN]: {message}', 'yellow'))
-                return
-            elif self.verbose and verbose:
-                print(colored(f'[{self.timestamp()}][{module}]: {message}', 'white'))
-                return
-            elif self.error and error:
-                print(colored(f'[{self.timestamp()}][{module}][ERROR]: {message}', 'red'))
-                return
-            elif not verbose and not warning and not debug:
-                print(f'[{self.timestamp()}][{module}]: {message}')
-                return
+            if color is not None:
+                print(colored(f'[{self.timestamp()}][{module}]{tag}: {message}', color))
+            else:
+                if self.verbose and log_type == self.Type.verbose:
+                    print(colored(f'[{self.timestamp()}][{module}]: {message}', 'white'))
+                    return
+                elif self.debug and log_type == self.Type.debug:
+                    print(colored(f'[{self.timestamp()}][{module}][DEBUG]: {message}', 'blue'))
+                    return
+                elif self.normal:
+                    print(f'[{self.timestamp()}][{module}]: {message}')
+                    return
+                elif self.warning and log_type == self.Type.warning:
+                    print(colored(f'[{self.timestamp()}][{module}][WARN]: {message}', 'yellow'))
+                    return
+                elif self.error and log_type == self.Type.error:
+                    print(colored(f'[{self.timestamp()}][{module}][ERROR]: {message}', 'red'))
+                    return
+

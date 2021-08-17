@@ -30,26 +30,28 @@ from discord.ext import commands
 class Administration(commands.Cog):
     def __init__(self, KateBot):
         self.KateBot = KateBot
-        self.KateBot.logging.log("Cog.Administration", "Initialized", verbose=True)
+        self.KateBot.log("Cog.Administration", "Initialized", self.KateBot.Log.Type.verbose)
         self.enabled = True
 
     @commands.command(name="shutdown", aliases=["quit", "logout"])
     @commands.has_permissions(administrator=True)
     async def shutdown(self, ctx):
+        """Shuts down KateBot! (Admin Only)"""
         try:
             await self.KateBot.close()
         except RuntimeError as err:
-            self.KateBot.logging.log("Discord", f"{err}")
-        self.KateBot.logging.log("Discord", "Logging Out!")
+            self.KateBot.Log.log("Discord", f"{err}")
+        self.KateBot.log("Discord", "Logging Out!", None)
 
     @commands.command(name="restart")
     @commands.has_permissions(administrator=True)
     async def restart(self, ctx):
+        """Restarts KateBot (Admin Only)"""
         try:
             await self.KateBot.close()
         except RuntimeError as err:
-            self.KateBot.logging.log("Discord", f"{err}")
-        self.KateBot.logging.log("Discord", "Logging Out!")
+            self.KateBot.Log.log("Discord", f"{err}")
+        self.KateBot.log("Discord", "Logging Out!", None)
 
 
 def setup(KateBot):

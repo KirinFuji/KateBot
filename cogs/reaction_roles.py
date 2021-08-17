@@ -35,39 +35,45 @@ class ReactionRoles(commands.Cog):
     """
     def __init__(self, KateBot):
         self.KateBot = KateBot
-        self.KateBot.logging.log("Cog.ReactionRoles", "Initialized", verbose=True)
+        self.KateBot.log("Cog.ReactionRoles", "Initialized", KateBot.Log.Type.verbose)
         self.enabled = True
 
-    @staticmethod
-    async def reaction_role(payload, emoji, role_name, remove=False):
+    async def reaction_role(self, payload, emoji, role_name, remove=False):
+        """Primary Logic flow for adding/removing roles"""
+        self.KateBot.log("ReactionRoles", f"\n  -Emoji: {payload.emoji.name} | {emoji}"
+                                          f"\n  -Role: {role_name}"
+                                          f"\n  -Remove: {remove}"
+                                          f"\n  -Member: {payload.member}", self.KateBot.Log.Type.debug)
         if payload.emoji.name == emoji:
+
             role = get(payload.member.guild.roles, name=role_name)
             if role is not None:
                 if role not in payload.member.roles:
                     await payload.member.add_roles(role)
+                    self.KateBot.log("ReactionRoles", f"({role_name}) added to ({payload.member})", None)
                 elif remove:
                     await payload.member.remove_roles(role)
+                    self.KateBot.log("ReactionRoles", f"({role_name}) removed from ({payload.member})", None)
             else:
-                raise TypeError(f"Role ({role_name}) not found in guild ({payload.member.guild})")
+                self.KateBot.log("ReactionRoles", f"Role ({role_name}) not found in guild ({payload.member.guild})",
+                                 self.KateBot.Log.Type.error)
+                raise TypeError(f"({role_name}) not found in guild ({payload.member.guild})")
 
     @commands.command(name="rr_disable")
     @commands.has_permissions(administrator=True)
     async def disable(self, ctx):
         """Disable Reaction Roles"""
         self.enabled = False
-        self.KateBot.logging.log("ReactionRoles", "Disabled", verbose=True)
+        self.KateBot.log("ReactionRoles", "Disabled", None)
 
     @commands.command(name="rr_enable")
     @commands.has_permissions(administrator=True)
     async def enable(self, ctx):
         """Enable Reaction Roles"""
         self.enabled = True
-        self.KateBot.logging.log("ReactionRoles", "Enabled", verbose=True)
-
-    # @commands.Cog.listener()
-    # async def on_message(self, message):
-    #     print(message.content)
+        self.KateBot.log("ReactionRoles", "Enabled", None)
 
 
 def setup(KateBot):
+    """Called by adding extension in main.py"""
     KateBot.add_cog(ReactionRoles(KateBot))
