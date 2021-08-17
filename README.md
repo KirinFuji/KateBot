@@ -6,6 +6,7 @@ Fill out the .json files and copy them into the root of the config folder, then 
 
 You will need both a Discord Application Token, and a bunch of reddit data, look up "AsyncPraw" quick start for an explanation on the data needed.
 
+![Sample](LogExample.png)
 
 Current Features:
 - MemeStream (Reddit FeedBot)
