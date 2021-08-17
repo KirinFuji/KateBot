@@ -1,6 +1,6 @@
 # KateBot
 
-# WARNING: As long as this notice remains, know that the features below are missing during a recode.
+### Recode Feature Complete
 
 Fill out the .json files and copy them into the root of the config folder, then run the bot.
 
@@ -9,7 +9,7 @@ You will need both a Discord Application Token, and a bunch of reddit data, look
 
 Current Features:
 - MemeStream (Reddit FeedBot)
-- MusicBot (now with Queue!)
+- MusicBot 
 - ReactionRoles (Dynamically from .json)
 
 Current Commands:
