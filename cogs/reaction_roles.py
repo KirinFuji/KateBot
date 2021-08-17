@@ -35,7 +35,7 @@ class ReactionRoles(commands.Cog):
     """
     def __init__(self, KateBot):
         self.KateBot = KateBot
-        self.KateBot.logging.log("Cog.ReactionRoles", "Initialized", verbose=True, force=True)
+        self.KateBot.logging.log("Cog.ReactionRoles", "Initialized", verbose=True)
         self.enabled = True
 
     @staticmethod
@@ -55,14 +55,14 @@ class ReactionRoles(commands.Cog):
     async def disable(self, ctx):
         """Disable Reaction Roles"""
         self.enabled = False
-        self.KateBot.logging.log("ReactionRoles", "Disabled", verbose=True, force=True)
+        self.KateBot.logging.log("ReactionRoles", "Disabled", verbose=True)
 
     @commands.command(name="rr_enable")
     @commands.has_permissions(administrator=True)
     async def enable(self, ctx):
         """Enable Reaction Roles"""
         self.enabled = True
-        self.KateBot.logging.log("ReactionRoles", "Enabled", verbose=True, force=True)
+        self.KateBot.logging.log("ReactionRoles", "Enabled", verbose=True)
 
     # @commands.Cog.listener()
     # async def on_message(self, message):

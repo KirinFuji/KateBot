@@ -1,5 +1,8 @@
 # Written by github.com/KirinFuji
 
+# NOTICE #
+# PyNaCl library needed in order to use MusicPlayer
+
 """
 MIT License
 
@@ -29,9 +32,7 @@ import discord
 from discord.ext import commands
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-import KateLib
-from LogLib import Logging
-from KateLib import load_json_file, RandomSymbols
+from KateLib import load_json_file, RandomSymbols, Logging
 from functools import wraps
 from asyncio.proactor_events import _ProactorBasePipeTransport # IDE Error: This exists on windows.
 RS = RandomSymbols()
@@ -115,10 +116,8 @@ if __name__ == '__main__':
     # Logging Setup
     Log = Logging()
     Log.debug = True
-    Log.bot = True
     Log.verbose = True
-    Log.music_player = True
-    Log.load()
+    Log.milliseconds = True
 
     # KateBot Setup
     KBot = KateBot(Log)
@@ -127,7 +126,6 @@ if __name__ == '__main__':
     KBot.load_extension("cogs.reaction_roles")
     KBot.load_extension("cogs.administrative")
     KBot.load_extension("cogs.music_player")
-    # KBot.load_extension("cogs.template")
 
     # Entry Point
     KBot.run(KBot.token)

@@ -26,6 +26,8 @@ SOFTWARE.
 
 from json import load as load_json
 from random import randint
+from datetime import datetime
+from termcolor import colored
 
 
 class RandomSymbols:
@@ -39,3 +41,39 @@ class RandomSymbols:
 def load_json_file(filename):
     with open(filename, 'r', encoding="utf8") as F:
         return load_json(F)
+
+
+class Logging:
+    def __init__(self):
+        self.verbose = False
+        self.debug = False
+        self.warning = True
+        self.error = True
+        self.normal = True
+        self.enabled = True
+        self.milliseconds = False
+        self.modules = []
+
+    def timestamp(self):
+        if self.milliseconds:
+            return datetime.utcnow()
+        else:
+            return datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+
+    def log(self, module, message, verbose=False, warning=False, debug=False, error=False):
+        if self.enabled:
+            if self.debug and debug:
+                print(colored(f'[{self.timestamp()}][{module}][DEBUG]: {message}', 'blue'))
+                return
+            elif self.warning and warning:
+                print(colored(f'[{self.timestamp()}][{module}][WARN]: {message}', 'yellow'))
+                return
+            elif self.verbose and verbose:
+                print(colored(f'[{self.timestamp()}][{module}]: {message}', 'white'))
+                return
+            elif self.error and error:
+                print(colored(f'[{self.timestamp()}][{module}][ERROR]: {message}', 'red'))
+                return
+            elif not verbose and not warning and not debug:
+                print(f'[{self.timestamp()}][{module}]: {message}')
+                return

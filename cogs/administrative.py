@@ -30,7 +30,8 @@ from discord.ext import commands
 class Administration(commands.Cog):
     def __init__(self, KateBot):
         self.KateBot = KateBot
-        self.KateBot.logging.log("Cog.Administration", "Initialized", verbose=True, force=True)
+        self.KateBot.logging.log("Cog.Administration", "Initialized", verbose=True)
+        self.enabled = True
 
     @commands.command(name="shutdown", aliases=["quit", "logout"])
     @commands.has_permissions(administrator=True)

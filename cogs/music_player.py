@@ -1,5 +1,8 @@
 # Written by github.com/KirinFuji
 
+# NOTICE #
+# PyNaCl library needed in order to use MusicPlayer
+
 """
 MIT License
 
@@ -45,7 +48,10 @@ class Queue:
         self.ffmpeg = config['ffmpeg_location']
         self.paused = False
         self.KateBot = KateBot
-        self.KateBot.logging.log("Cog.MusicPlayer.Queue", "Initialized", verbose=True, force=True)
+        self.KateBot.logging.log("Cog.MusicPlayer.Queue", "Initialized", verbose=True)
+        self.KateBot.logging.log("Cog.MusicPlayer.Queue",
+                                 f'\n    - ffmpeg_location: {self.ffmpeg}\n    - music_location: {self.music_home}',
+                                 debug=True)
 
     def enqueue(self, song):
         self.songList.append(song)
@@ -124,12 +130,23 @@ class MusicPlayer(commands.Cog):
     def __init__(self, KateBot):
         self.KateBot = KateBot
         self.queue = Queue(self.KateBot)
-        self.KateBot.logging.log("Cog.MusicPlayer", "Initialized", verbose=True, force=True)
+        self.KateBot.logging.log("Cog.MusicPlayer", "Initialized", verbose=True)
+        self.enabled = True
 
-    @commands.command(name="test2")
-    # @commands.has_role("Mod")
-    async def test2(self, ctx):
-        self.KateBot.logging.log("MusicPlayer", "Initialized", verbose=True, force=True)
+    # Voice Channel
+
+    @commands.command(name="join")
+    @commands.guild_only()
+    async def join_voice(self, ctx, *args):
+        print(args[0])
+        channel = self.KateBot.get_channel(int(args[0]))
+        await channel.connect(timeout=60.0, reconnect=True)
+
+    @commands.command(name="leave")
+    @commands.guild_only()
+    async def leave_voice(self, ctx, *args):
+        for client in self.KateBot.voice_clients:
+            await client.disconnect()
 
     @commands.command(name="play", pass_context=False)
     @commands.guild_only()

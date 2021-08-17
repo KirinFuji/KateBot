@@ -30,7 +30,8 @@ from discord.ext import commands
 class RedditCog(commands.Cog):
     def __init__(self, KateBot):
         self.KateBot = KateBot
-        self.KateBot.logging.log("Cog.Reddit", "Initialized", verbose=True, force=True)
+        self.KateBot.logging.log("Cog.Reddit", "Initialized", verbose=True)
+        self.enabled = True
 
 
 def setup(KateBot):
