@@ -1,0 +1,8 @@
+{
+    "client_id": "client_id",
+    "client_secret": "client_secret",
+    "user_agent": "<os>:asyncpraw.<BotName> (by u/<reddit_user>)",
+    "username": "<reddit_user>",
+    "password": "<reddit_password>!",
+    "monitored_subs": ["memes","programminghorror","funny"]
+}
