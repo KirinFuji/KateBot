@@ -1,17 +1,52 @@
+# Written by github.com/KirinFuji
+
+"""
+MIT License
+
+Copyright (c) 2021 KirinFuji@users.noreply.github.com
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
+
 import platform
 import discord
 from discord.utils import get
 from discord.ext import commands
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
 from LogLib import Logging
 from music_player import Queue
 from KateLib import load_json_file, RandomSymbols
 from functools import wraps
-from asyncio.proactor_events import _ProactorBasePipeTransport
+from asyncio.proactor_events import _ProactorBasePipeTransport # IDE Error: This exists on windows.
 RS = RandomSymbols()
 
 
 # Windows Development Fix
+# Big thanks to https://github.com/paaksing for this snippet!
 # https://github.com/aio-libs/aiohttp/issues/4324
+# http://www.apache.org/licenses/LICENSE-2.0
+""" This code serves to fix a crash that specifically happens on windows due to the aiohttp 
+library using a different underlying mechanism on windows. See issue 4324 for more information."""
+
+
 def silence_event_loop_closed(func):
     @wraps(func)
     def wrapper(self, *args, **kwargs):
@@ -29,13 +64,13 @@ if platform.system() == 'Windows':
 # End Windows Development Fix
 
 
-class MyHelpCommand(commands.MinimalHelpCommand):
+class CustomHelp(commands.MinimalHelpCommand):
     async def send_pages(self):
-        destination = self.get_destination()
-        e = discord.Embed(color=discord.Color.blurple(), description='')
+        channel = self.get_destination()
+        embed = discord.Embed(color=discord.Color.blurple())
         for page in self.paginator.pages:
-            e.description += page
-        await destination.send(embed=e)
+            embed.description += page
+        await channel.send(embed=embed)
 
 # Discord.py Bot Extension
 class KateBot(commands.Bot):
@@ -104,77 +139,29 @@ class KateBot(commands.Bot):
 
 
 if __name__ == '__main__':
-    from sqlalchemy import Column, Integer, String, ForeignKey, Table
-    from sqlalchemy.orm import relationship, backref
-    from sqlalchemy.ext.declarative import declarative_base
 
-    Base = declarative_base()
-
-    author_publisher = Table(
-        "author_publisher",
-        Base.metadata,
-        Column("author_id", Integer, ForeignKey("author.author_id")),
-        Column("publisher_id", Integer, ForeignKey("publisher.publisher_id")),
-    )
-
-    book_publisher = Table(
-        "book_publisher",
-        Base.metadata,
-        Column("book_id", Integer, ForeignKey("book.book_id")),
-        Column("publisher_id", Integer, ForeignKey("publisher.publisher_id")),
-    )
-
-
-    class Author(Base):
-        __tablename__ = "author"
-        author_id = Column(Integer, primary_key=True)
-        first_name = Column(String)
-        last_name = Column(String)
-        books = relationship("Book", backref=backref("author"))
-        publishers = relationship(
-            "Publisher", secondary=author_publisher, back_populates="authors"
-        )
-
-
-    class Book(Base):
-        __tablename__ = "book"
-        book_id = Column(Integer, primary_key=True)
-        author_id = Column(Integer, ForeignKey("author.author_id"))
-        title = Column(String)
-        publishers = relationship(
-            "Publisher", secondary=book_publisher, back_populates="books"
-        )
-
-
-    class Publisher(Base):
-        __tablename__ = "publisher"
-        publisher_id = Column(Integer, primary_key=True)
-        name = Column(String)
-        authors = relationship(
-            "Author", secondary=author_publisher, back_populates="publishers"
-        )
-        books = relationship(
-            "Book", secondary=book_publisher, back_populates="publishers"
-        )
-
-
-    engine = create_engine(f"sqlite:///{sqlite_filepath}")
+    # SQL Alchemy Setup
+    engine = create_engine(f"sqlite:///database.db")
     Session = sessionmaker()
     Session.configure(bind=engine)
     session = Session()
 
-
+    # Logging Setup
     Log = Logging()
     Log.debug = True
     Log.bot = True
     Log.verbose = True
     Log.music_player = True
     Log.load()
+
+    # KateBot Setup
     KBot = KateBot(Log)
     KBot.load_extension("cogs.reddit")
-    KBot.help_command = MyHelpCommand()
+    KBot.help_command = CustomHelp()
     KBot.load_extension("cogs.reaction_roles")
-    #KBot.load_extension("cogs.template")
+    # KBot.load_extension("cogs.template")
+
+    # Entry Point
     KBot.run(KBot.token)
 
 
