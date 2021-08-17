@@ -27,20 +27,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from asyncio import run_coroutine_threadsafe
 from discord.ext import commands
 from discord import FFmpegPCMAudio, PCMVolumeTransformer
 from os import listdir, path
 from os.path import isfile, join
 from random import randint
 # noinspection PyUnresolvedReferences
-import KateLib  # IDE Error: main.py is being run from a level lower
-# noinspection PyUnresolvedReferences
-import main  # IDE Error: main.py is being run from a level lower
-
+from KateLib import load_json_file  # IDE Error: main.py is being run from a level lower
 
 class Queue:
     def __init__(self, KateBot):
-        config = KateLib.load_json_file('config/music_player.json', KateBot.Log)
+        config = load_json_file('config/music_player.json', KateBot.Log)
         self.KateBot = KateBot
         self.songList = []
         self.currentSong = None
@@ -66,17 +64,19 @@ class Queue:
             client.stop()
             self.isPlaying = False
 
-    def stop(self, client):
+    async def stop(self, client):
         if client.is_playing():
             self.songList = []
             self.isPlaying = False
             client.stop()
+            await self.KateBot.set_idle()
 
     def resume(self, client):
         client.resume()
         self.paused = False
 
-    def play(self, client, song=None):
+    async def play(self, client, song=None):
+        """Main function for music player and queue"""
         if song is not None and song not in self.songList:
             self.KateBot.log("MusicPlayer", f"Queued Song: {song}", self.KateBot.Log.Type.verbose)
             self.enqueue(song)
@@ -91,11 +91,13 @@ class Queue:
                     client.play(PCMVolumeTransformer(audio_source, 0.8),
                                 after=lambda x: self.play_next(client))
                     self.isPlaying = True
+                    await self.KateBot.set_listening(self.currentSong)
                 else:
                     self.KateBot.log("MusicPlayer", f"Music file not found!: \n {full_path}",
                                      self.KateBot.Log.Type.error)
                     raise FileNotFoundError
             else:
+                await self.KateBot.set_idle()
                 self.KateBot.log("MusicPlayer", "Queue is empty!", self.KateBot.Log.Type.warning)
 
     def dequeue(self, song):
@@ -105,18 +107,16 @@ class Queue:
         self.KateBot.log("MusicPlayer", f"{song} not in queue.", self.KateBot.Log.Type.warning)
 
     def play_next(self, client):
+        """Workaround for calling async method from lambda"""
         self.KateBot.log("MusicPlayer", f"Song Finished: {self.currentSong}", self.KateBot.Log.Type.verbose)
         self.isPlaying = False
-        if len(self.songList) > 0:
-            self.play(client)
-        else:
-            self.KateBot.log("MusicPlayer", f"Queue Finished!", self.KateBot.Log.Type.verbose)
-            self.isPlaying = False
+        # Workaround to call asynchronous method from lambda
+        run_coroutine_threadsafe(self.play(client), self.KateBot.loop)
 
-    def play_playlist(self, client, playlist):
+    async def play_playlist(self, client, playlist):
         if len(playlist) > 0:
             self.songList = playlist
-            self.play(client)
+            await self.play(client)
 
     def random_song_list(self, count):
         self.KateBot.log("MusicPlayer", f"Generating Queue of {count} random songs!", self.KateBot.Log.Type.verbose)
@@ -161,13 +161,13 @@ class MusicPlayer(commands.Cog):
         if len(args) > 0:
             mp3 = args[0]
             if len(self.KateBot.voice_clients) > 0:
-                self.queue.play(self.KateBot.voice_clients[0], song=mp3)
+                await self.queue.play(self.KateBot.voice_clients[0], song=mp3)
 
     @commands.command(name='random_music', pass_context=False)
     @commands.guild_only()
     async def random_music(self, ctx):
         if len(self.KateBot.voice_clients) > 0:
-            self.queue.play_playlist(self.KateBot.voice_clients[0], self.queue.random_song_list(5))
+            await self.queue.play_playlist(self.KateBot.voice_clients[0], self.queue.random_song_list(5))
 
     @commands.command(name='stop', pass_context=False)
     @commands.guild_only()

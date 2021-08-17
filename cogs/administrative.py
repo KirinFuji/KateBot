@@ -25,19 +25,37 @@ SOFTWARE.
 """
 
 from discord.ext import commands
+from discord import Color, Embed
+# noinspection PyUnresolvedReferences
+from KateLib import RandomSymbols # IDE Error: main.py is being run from a level lower
+
+
+class CustomHelp(commands.MinimalHelpCommand):
+    """Custom Discord Help Command"""
+
+    async def send_pages(self):
+        """Modified send_pages sends the information in an embed"""
+        channel = self.get_destination()
+        embed = Embed(color=Color.blurple(), description='')
+        for page in self.paginator.pages:
+            embed.description += page
+        await channel.send(embed=embed)
 
 
 class Administration(commands.Cog):
+    """Administrative commands for running the bot."""
     def __init__(self, KateBot):
         self.KateBot = KateBot
         self.KateBot.log("Cog.Administration", "Initialized", self.KateBot.Log.Type.verbose)
         self.enabled = True
+        self.RS = RandomSymbols()
 
     @commands.command(name="shutdown", aliases=["quit", "logout"])
     @commands.has_permissions(administrator=True)
     async def shutdown(self, ctx):
         """Shuts down KateBot! (Admin Only)"""
         try:
+            await ctx.channel.send(f'Bye! {self.RS.random_heart()}')
             await self.KateBot.close()
         except RuntimeError as err:
             self.KateBot.Log.log("Discord", f"{err}")
@@ -53,6 +71,30 @@ class Administration(commands.Cog):
             self.KateBot.Log.log("Discord", f"{err}")
         self.KateBot.log("Discord", "Logging Out!", None)
 
+    # Cleanup Command
+    @commands.command(name='cleanup', aliases=['clean', 'scrub'])
+    @commands.guild_only()
+    @commands.is_owner()
+    async def cleanup(self, ctx, *args):
+        """!Cleanup [all|<username>] Starts deleting messages in the channel the command is run, up to 200."""
+        messages = await ctx.channel.history(limit=200).flatten()
+        for m in messages:
+            if 'all' in args:
+                self.KateBot.log('Discord', f'Deleting: {m.author.name}: {m.content}', self.KateBot.Log.Type.verbose)
+                await m.delete()
+            elif m.author.name in args:
+                self.KateBot.log('Discord', f'Deleting: {m.author.name}: {m.content}', self.KateBot.Log.Type.verbose)
+                await m.delete()
+
+    # Status Command
+    @commands.command(name="status", pass_context=True)
+    @commands.guild_only()
+    async def status(self, ctx, *args):
+        """Is the bot still alive command."""
+        await ctx.channel.send(f'I\'m still here, {ctx.author.name}! {self.RS.random_heart()}')
+
 
 def setup(KateBot):
-    KateBot.add_cog(Administration(KateBot))
+    cog = Administration(KateBot)
+    KateBot.help_command = CustomHelp()
+    KateBot.add_cog(cog)

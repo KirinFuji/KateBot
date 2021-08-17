@@ -26,6 +26,8 @@ SOFTWARE.
 
 from discord.ext import commands
 from discord.utils import get
+# noinspection PyUnresolvedReferences
+from KateLib import load_json_file  # IDE Error: main.py is being run from a level lower
 
 
 class ReactionRoles(commands.Cog):
@@ -34,6 +36,7 @@ class ReactionRoles(commands.Cog):
     This cog contains the code for parsing reactions.json and acting on incoming reactions.
     """
     def __init__(self, KateBot):
+        self.reactions = load_json_file('config/reactions.json', KateBot.Log)
         self.KateBot = KateBot
         self.KateBot.log("Cog.ReactionRoles", "Initialized", KateBot.Log.Type.verbose)
         self.enabled = True
@@ -59,6 +62,14 @@ class ReactionRoles(commands.Cog):
                                  self.KateBot.Log.Type.error)
                 raise TypeError(f"({role_name}) not found in guild ({payload.member.guild})")
 
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload):
+        """Reaction Roles"""
+        # Reactions Loop (reactions.json)
+        for reaction in self.reactions:
+            if payload.message_id == reaction["message_id"]:
+                await self.reaction_role(payload, reaction["emoji"], reaction["role_name"])
+
     @commands.command(name="rr_disable")
     @commands.has_permissions(administrator=True)
     async def disable(self, ctx):
@@ -75,5 +86,14 @@ class ReactionRoles(commands.Cog):
 
 
 def setup(KateBot):
+    #
     """Called by adding extension in main.py"""
-    KateBot.add_cog(ReactionRoles(KateBot))
+
+    try:
+        if KateBot.cogs['RedditCog']:
+            KateBot.add_cog(ReactionRoles(KateBot))
+    except KeyError as err:
+        KateBot.log("Reddit", "RedditCog missing!", KateBot.Log.Type.error)
+        raise ModuleNotFoundError("Reactions Module Requires RedditCog")
+
+

@@ -71,18 +71,6 @@ if platform.system() == 'Windows':
 # End Windows Development Fix
 
 
-class CustomHelp(commands.MinimalHelpCommand):
-    """Custom Discord Help Command"""
-
-    async def send_pages(self):
-        """Modified send_pages sends the information in an embed"""
-        channel = self.get_destination()
-        embed = discord.Embed(color=discord.Color.blurple(), description='')
-        for page in self.paginator.pages:
-            embed.description += page
-        await channel.send(embed=embed)
-
-
 class KateBot(commands.Bot):
     """Discord.py Bot Extension"""
 
@@ -101,10 +89,12 @@ class KateBot(commands.Bot):
                               case_insensitive=config['case_insensitive'],
                               intents=intent)
         # Initialize additional objects
+        self.tasks = []
         self.token = config['token']
         self.Log = Logger
         self.log = self.Log.log
         self.log('KateBot', "Initialized", self.Log.Type.verbose)
+
 
     async def on_ready(self):
         """Runs when successfully connected to Discord API"""
@@ -117,6 +107,12 @@ class KateBot(commands.Bot):
                             f" Channel: [{ctx.channel}]",
                             self.Log.Type.error)
 
+    async def set_listening(self, text):
+        da = discord.ActivityType
+        await self.change_presence(activity=discord.Activity(type=da.listening, name=text.replace('.mp3', '')))
+
+    async def set_idle(self):
+        await self.change_presence(activity=None)
 
 if __name__ == '__main__':
     RS = RandomSymbols()
@@ -135,11 +131,13 @@ if __name__ == '__main__':
 
     # KateBot Setup
     KBot = KateBot(Logg)
-    KBot.help_command = CustomHelp()
-    KBot.load_extension("cogs.reddit")
-    KBot.load_extension("cogs.reaction_roles")
     KBot.load_extension("cogs.administrative")
     KBot.load_extension("cogs.music_player")
+    KBot.load_extension("cogs.reddit")
+    KBot.load_extension("cogs.reaction_roles")
+
+
+    # KBot.get_cog('reddit')
 
     # Entry Point
     KBot.run(KBot.token)
