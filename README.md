@@ -1,4 +1,4 @@
-# KateBot2.0
+# KateBot
 
 Fill out the .json files and copy them into the root of the config folder, then run the bot.
 
