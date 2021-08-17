@@ -58,7 +58,7 @@ class Logging:
         if self.reddit:
             self.modules.append('Reddit')
         if self.music_player:
-            self.modules.append('MusicBot')
+            self.modules.append('MusicPlayer')
 
     def log(self, module, message, verbose=False, warning=False, debug=False, error=False, force=False):
         if self.enabled and module in self.modules or force:

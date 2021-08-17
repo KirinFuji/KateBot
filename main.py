@@ -26,13 +26,11 @@ SOFTWARE.
 
 import platform
 import discord
-from discord.utils import get
 from discord.ext import commands
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-
+import KateLib
 from LogLib import Logging
-from music_player import Queue
 from KateLib import load_json_file, RandomSymbols
 from functools import wraps
 from asyncio.proactor_events import _ProactorBasePipeTransport # IDE Error: This exists on windows.
@@ -64,78 +62,46 @@ if platform.system() == 'Windows':
 # End Windows Development Fix
 
 
+# Discord.py Help Extension
 class CustomHelp(commands.MinimalHelpCommand):
     async def send_pages(self):
         channel = self.get_destination()
-        embed = discord.Embed(color=discord.Color.blurple())
+        embed = discord.Embed(color=discord.Color.blurple(), description='')
         for page in self.paginator.pages:
             embed.description += page
         await channel.send(embed=embed)
 
+
 # Discord.py Bot Extension
 class KateBot(commands.Bot):
     def __init__(self, Logger):
-
+        # Create Dictionary from discord.json
         config = load_json_file('config/discord.json')
-
+        # Setup Gateway Intents
         intent = discord.Intents.default()
         intent.members = config['members_intent']
         intent.typing = config['typing_intent']
         intent.presences = config['presences_intent']
-
+        # Initialize inherited Bot class
         commands.Bot.__init__(self,
                               owner_ids=config['owner_ids'],
                               command_prefix=config['prefix'],
                               case_insensitive=config['case_insensitive'],
                               intents=intent)
-
+        # Initialize additional objects
         self.token = config['token']
         self.logging = Logger
-        self.player = Queue(Logger=Logger)
-
-        self.add_commands()
         self.logging.log('KateBot', "Initialized", verbose=True)
 
-    @staticmethod
-    async def reaction_role(payload, emoji, role_name, remove=False):
-        if payload.emoji.name == emoji:
-            role = get(payload.member.guild.roles, name=role_name)
-            if role is not None:
-                if role not in payload.member.roles:
-                    await payload.member.add_roles(role)
-                elif remove:
-                    await payload.member.remove_roles(role)
-            else:
-                raise TypeError(f"Role ({role_name}) not found in guild ({payload.member.guild})")
-
+    # Runs when successfully connected to Discord API
     async def on_ready(self):
         self.logging.log('Discord', f'Logged in as {self.user}! {RS.random_heart()}')
 
+    # Create Exception Handler for command errors
     async def on_command_error(self, ctx, error):
         self.logging.log("Discord", f"{error}\n"
                                     f" Author: [{ctx.author}]\n"
                                     f" Channel: [{ctx.channel}]", error=True)
-
-    # IDE Bug? Self should be purple.
-    def add_commands(self):
-        @self.command(name="shutdown", aliases=["quit", "logout"])
-        @commands.has_permissions(administrator=True)
-        async def shutdown(ctx):
-            try:
-                await self.close()
-            except RuntimeError as err:
-                self.logging.log("Discord", f"{err}")
-            self.logging.log("Discord", "Logging Out!")
-
-        @self.command(category="administrative", name="restart",
-                      brief='Restart bot', description='Restarts the discord bot.')
-        @commands.has_permissions(administrator=True)
-        async def shutdown(ctx):
-            try:
-                await self.close()
-            except RuntimeError as err:
-                self.logging.log("Discord", f"{err}")
-            self.logging.log("Discord", "Logging Out!")
 
 
 if __name__ == '__main__':
@@ -156,9 +122,11 @@ if __name__ == '__main__':
 
     # KateBot Setup
     KBot = KateBot(Log)
-    KBot.load_extension("cogs.reddit")
     KBot.help_command = CustomHelp()
+    KBot.load_extension("cogs.reddit")
     KBot.load_extension("cogs.reaction_roles")
+    KBot.load_extension("cogs.administrative")
+    KBot.load_extension("cogs.music_player")
     # KBot.load_extension("cogs.template")
 
     # Entry Point

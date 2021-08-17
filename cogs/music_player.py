@@ -24,24 +24,28 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
+from discord.ext import commands
 from discord import FFmpegPCMAudio, PCMVolumeTransformer
 from os import listdir, path
 from os.path import isfile, join
 from random import randint
-from KateLib import load_json_file
+# noinspection PyUnresolvedReferences
+import KateLib  # IDE Error: main.py is being run from a level lower
+# noinspection PyUnresolvedReferences
+import main     # IDE Error: main.py is being run from a level lower
 
 
 class Queue:
-    def __init__(self, Logger):
-        config = load_json_file('config/music_player.json')
+    def __init__(self, KateBot):
+        config = KateLib.load_json_file('config/music_player.json')
         self.songList = []
         self.currentSong = None
         self.isPlaying = False
         self.music_home = config['music_location']
         self.ffmpeg = config['ffmpeg_location']
         self.paused = False
-        self.logging = Logger
-        self.logging.log("MusicBot", "Initialized", verbose=True)
+        self.KateBot = KateBot
+        self.KateBot.logging.log("Cog.MusicPlayer.Queue", "Initialized", verbose=True, force=True)
 
     def enqueue(self, song):
         self.songList.append(song)
@@ -68,7 +72,7 @@ class Queue:
 
     def play(self, client, song=None):
         if song is not None and song not in self.songList:
-            self.logging.log("MusicBot", f"Queued Song: {song}", verbose=True)
+            self.KateBot.logging.log("MusicPlayer", f"Queued Song: {song}", verbose=True)
             self.enqueue(song)
         if not self.isPlaying:
             if len(self.songList) > 0:
@@ -76,30 +80,30 @@ class Queue:
                 self.songList.pop(0)
                 full_path = f'{self.music_home}\\{self.currentSong}'
                 if path.isfile(full_path):
-                    self.logging.log("MusicBot", f"Playing Song: {self.currentSong}")
+                    self.KateBot.logging.log("MusicPlayer", f"Playing Song: {self.currentSong}")
                     audio_source = FFmpegPCMAudio(full_path, executable=self.ffmpeg)
                     client.play(PCMVolumeTransformer(audio_source, 0.8),
                                 after=lambda x: self.play_next(client))
                     self.isPlaying = True
                 else:
-                    self.logging.log("MusicBot", f"Music file not found!: \n {full_path}", error=True)
+                    self.KateBot.logging.log("MusicPlayer", f"Music file not found!: \n {full_path}", error=True)
                     raise FileNotFoundError
             else:
-                self.logging.log("MusicBot", "Queue is empty!", warning=True)
+                self.KateBot.logging.log("MusicPlayer", "Queue is empty!", warning=True)
 
     def dequeue(self, song):
         if song in self.songList:
             self.songList.remove(song)
-            self.logging.log("MusicBot", f"Removed: {song} from queue.", verbose=True)
-        self.logging.log("MusicBot", f"{song} not in queue.", warning=True)
+            self.KateBot.logging.log("MusicPlayer", f"Removed: {song} from queue.", verbose=True)
+        self.KateBot.logging.log("MusicPlayer", f"{song} not in queue.", warning=True)
 
     def play_next(self, client):
-        self.logging.log("MusicBot", f"Song Finished: {self.currentSong}", verbose=True)
+        self.KateBot.logging.log("MusicPlayer", f"Song Finished: {self.currentSong}", verbose=True)
         self.isPlaying = False
         if len(self.songList) > 0:
             self.play(client)
         else:
-            self.logging.log("MusicBot", f"Queue Finished!", verbose=True)
+            self.KateBot.logging.log("MusicPlayer", f"Queue Finished!", verbose=True)
             self.isPlaying = False
 
     def play_playlist(self, client, playlist):
@@ -108,9 +112,63 @@ class Queue:
             self.play(client)
 
     def random_song_list(self, count):
-        self.logging.log("MusicBot", f"Generating Queue of {count} random songs!", verbose=True)
+        self.KateBot.logging.log("MusicPlayer", f"Generating Queue of {count} random songs!", verbose=True)
         only_files = [f for f in listdir(self.music_home) if isfile(join(self.music_home, f)) and f.endswith(".mp3")]
         song_list = []
         for i in range(count):
             song_list.append(only_files[randint(0, len(only_files))])
         return song_list
+
+
+class MusicPlayer(commands.Cog):
+    def __init__(self, KateBot):
+        self.KateBot = KateBot
+        self.queue = Queue(self.KateBot)
+        self.KateBot.logging.log("Cog.MusicPlayer", "Initialized", verbose=True, force=True)
+
+    @commands.command(name="test2")
+    # @commands.has_role("Mod")
+    async def test2(self, ctx):
+        self.KateBot.logging.log("MusicPlayer", "Initialized", verbose=True, force=True)
+
+    @commands.command(name="play", pass_context=False)
+    @commands.guild_only()
+    async def play_music(self, ctx, *args):
+        if len(args) > 0:
+            mp3 = args[0]
+            if len(self.KateBot.voice_clients) > 0:
+                self.queue.play(self.KateBot.voice_clients[0], song=mp3)
+
+    @commands.command(name='random_music', pass_context=False)
+    @commands.guild_only()
+    async def random_music(self, ctx):
+        if len(self.KateBot.voice_clients) > 0:
+            self.queue.play_playlist(self.KateBot.voice_clients[0], self.queue.random_song_list(5))
+
+    @commands.command(name='stop', pass_context=False)
+    @commands.guild_only()
+    async def stop_music(self, ctx):
+        if len(self.KateBot.voice_clients) > 0:
+            self.queue.stop(self.KateBot.voice_clients[0])
+
+    @commands.command(name='next', pass_context=False)
+    @commands.guild_only()
+    async def next_music(self, ctx):
+        if len(self.KateBot.voice_clients) > 0:
+            self.queue.next(self.KateBot.voice_clients[0])
+
+    @commands.command(name='pause', pass_context=False)
+    @commands.guild_only()
+    async def pause_music(self, ctx):
+        if len(self.KateBot.voice_clients) > 0:
+            self.queue.pause(self.KateBot.voice_clients[0])
+
+    @commands.command(name='resume', pass_context=False)
+    @commands.guild_only()
+    async def resume_music(self, ctx):
+        if len(self.KateBot.voice_clients) > 0:
+            self.queue.resume(self.KateBot.voice_clients[0])
+
+
+def setup(KateBot):
+    KateBot.add_cog(MusicPlayer(KateBot))

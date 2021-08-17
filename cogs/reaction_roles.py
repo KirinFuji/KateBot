@@ -25,6 +25,7 @@ SOFTWARE.
 """
 
 from discord.ext import commands
+from discord.utils import get
 
 
 class ReactionRoles(commands.Cog):
@@ -34,17 +35,29 @@ class ReactionRoles(commands.Cog):
     """
     def __init__(self, KateBot):
         self.KateBot = KateBot
-        self.KateBot.logging.log("ReactionRoles", "Initialized", verbose=True, force=True)
+        self.KateBot.logging.log("Cog.ReactionRoles", "Initialized", verbose=True, force=True)
         self.enabled = True
 
-    @commands.command(name="disable_rr")
+    @staticmethod
+    async def reaction_role(payload, emoji, role_name, remove=False):
+        if payload.emoji.name == emoji:
+            role = get(payload.member.guild.roles, name=role_name)
+            if role is not None:
+                if role not in payload.member.roles:
+                    await payload.member.add_roles(role)
+                elif remove:
+                    await payload.member.remove_roles(role)
+            else:
+                raise TypeError(f"Role ({role_name}) not found in guild ({payload.member.guild})")
+
+    @commands.command(name="rr_disable")
     @commands.has_permissions(administrator=True)
     async def disable(self, ctx):
         """Disable Reaction Roles"""
         self.enabled = False
         self.KateBot.logging.log("ReactionRoles", "Disabled", verbose=True, force=True)
 
-    @commands.command(name="enable__rr")
+    @commands.command(name="rr_enable")
     @commands.has_permissions(administrator=True)
     async def enable(self, ctx):
         """Enable Reaction Roles"""
