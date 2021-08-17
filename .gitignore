@@ -127,4 +127,5 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-config/discord.json
+config/*
+config/
