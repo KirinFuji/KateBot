@@ -173,7 +173,7 @@ class MusicPlayer(commands.Cog):
     @commands.guild_only()
     async def stop_music(self, ctx):
         if len(self.KateBot.voice_clients) > 0:
-            self.queue.stop(self.KateBot.voice_clients[0])
+            await self.queue.stop(self.KateBot.voice_clients[0])
 
     @commands.command(name='next', pass_context=False)
     @commands.guild_only()

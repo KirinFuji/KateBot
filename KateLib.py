@@ -112,7 +112,7 @@ class Log:
                 elif self.debug and log_type == self.Type.debug:
                     print(colored(f'[{self.timestamp()}][{module}][DEBUG]: {message}', 'blue'))
                     return
-                elif self.normal:
+                elif self.normal and log_type == self.Type.normal:
                     print(f'[{self.timestamp()}][{module}]: {message}')
                     return
                 elif self.warning and log_type == self.Type.warning:

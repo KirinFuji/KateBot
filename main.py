@@ -112,7 +112,8 @@ class KateBot(commands.Bot):
         await self.change_presence(activity=discord.Activity(type=da.listening, name=text.replace('.mp3', '')))
 
     async def set_idle(self):
-        await self.change_presence(activity=None)
+        da = discord.ActivityType
+        await self.change_presence(activity=discord.Activity(type=da.listening, name=''))
 
 if __name__ == '__main__':
     RS = RandomSymbols()
@@ -125,9 +126,9 @@ if __name__ == '__main__':
 
     # Logging Setup
     Logg = Log()
-    Logg.debug = True
-    Logg.verbose = True
-    Logg.milliseconds = True
+    Logg.debug = False
+    Logg.verbose = False
+    Logg.milliseconds = False
 
     # KateBot Setup
     KBot = KateBot(Logg)

@@ -70,6 +70,19 @@ class ReactionRoles(commands.Cog):
             if payload.message_id == reaction["message_id"]:
                 await self.reaction_role(payload, reaction["emoji"], reaction["role_name"])
 
+    @commands.Cog.listener()
+    async def on_raw_reaction_remove(self, payload):
+        if payload.user_id == self.KateBot.user.id:
+            return
+
+        # Requires Members Intent
+        guild = self.KateBot.get_guild(payload.guild_id)
+        member = guild.get_member(payload.user_id)
+        payload.member = member
+        for reaction in self.reactions:
+            if payload.message_id == reaction["message_id"]:
+                await self.reaction_role(payload, reaction["emoji"], reaction["role_name"], remove=True)
+
     @commands.command(name="rr_disable")
     @commands.has_permissions(administrator=True)
     async def disable(self, ctx):
