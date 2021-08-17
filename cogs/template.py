@@ -6,7 +6,7 @@ class MainCog(commands.Cog):
         self.KateBot = KateBot
         self.KateBot.logging.log("MainCog", "Initialized", verbose=True, force=True)
 
-    @commands.command(name="test2", pass_context=True)
+    @commands.command(name="test2")
     # @commands.has_role("Mod")
     async def test2(self, ctx):
         self.KateBot.logging.log("MainCog", "Initialized", verbose=True, force=True)
