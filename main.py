@@ -27,17 +27,21 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import platform
+
+from os.path import isdir
+from os import mkdir
 import discord
 from discord.ext import commands
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from KateLib import load_json_file, RandomSymbols, Log
 from functools import wraps
+from shutil import copytree
 
 # Windows Development Fix
 # noinspection PyProtectedMember
 # Protected member is being patched as a bug fix.
+import platform
 from asyncio.proactor_events import _ProactorBasePipeTransport
 
 
@@ -77,6 +81,10 @@ class KateBot(commands.Bot):
     def __init__(self, Logger):
         # Create Dictionary from discord.json
         config = load_json_file('config/discord.json', Logger)
+        self.token = config['token']
+        if self.token == "<token>":
+            raise ValueError("You must fill out discord.json!!")
+            exit(1)
         # Setup Gateway Intents
         intent = discord.Intents.default()
         intent.members = config['members_intent']
@@ -90,7 +98,7 @@ class KateBot(commands.Bot):
                               intents=intent)
         # Initialize additional objects
         self.tasks = []
-        self.token = config['token']
+
         self.Log = Logger
         self.log = self.Log.log
         self.log('KateBot', "Initialized", self.Log.Type.verbose)
@@ -116,6 +124,19 @@ class KateBot(commands.Bot):
         await self.change_presence(activity=discord.Activity(type=da.listening, name=''))
 
 if __name__ == '__main__':
+
+    if not isdir('config/'):
+        try:
+            #mkdir('./config/')
+            copytree('config-samples', 'config')
+        except FileExistsError:
+            pass
+        except OSError as err:
+            print(f"Error Creating Config Directory: {err}")
+        print("Config Files Generated @ config/ please fill them out!")
+        exit(1)
+
+
     RS = RandomSymbols()
 
     # SQL Alchemy Setup
@@ -136,7 +157,6 @@ if __name__ == '__main__':
     KBot.load_extension("cogs.music_player")
     KBot.load_extension("cogs.reddit")
     KBot.load_extension("cogs.reaction_roles")
-
 
     # KBot.get_cog('reddit')
 

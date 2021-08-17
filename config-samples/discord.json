@@ -1,13 +1,11 @@
 {
-    "bot_token": "<token>",
-    "bot_prefix": "!",
-    "bot_home_guild": 100000000000000000,
-    "bot_owner_list": [200000000000000000,300000000000000000],
+    "token": "<token>",
+    "prefix": "!",
+    "guild_home": 100000000000000000,
+    "owner_ids": [200000000000000000,300000000000000000],
+    "members_intent": true,
+    "typing_intent": false,
+    "presences_intent": false,
     "case_insensitive": true,
-    "logging": true,
-    "meme_stream": true,
-    "meme_stream_channel": 400000000000000000,
-    "ffmpeg_location":  "C:\\path\\to\\ffmpeg.exe",
-    "music_location": "\\\\path\\to\\music\\share"
+    "logging": true
 }
-
