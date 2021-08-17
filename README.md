@@ -13,7 +13,7 @@ Current Features:
 - MusicBot 
 - ReactionRoles (Dynamically from .json)
 
-Current Commands:
+Current Commands (Outdated, use !Help):
 - !Status -- Is the bot still alive test command.
 - !Exit -- Attempts to gracefully shutdown (graceful part being wip)
 - !Cleanup \<all|Username> -- Starts deleting messages in the channel it is run in.
