@@ -34,21 +34,24 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from KateLib import load_json_file, RandomSymbols, Logging
 from functools import wraps
-from asyncio.proactor_events import _ProactorBasePipeTransport # IDE Error: This exists on windows.
-RS = RandomSymbols()
-
 
 # Windows Development Fix
+# noinspection PyProtectedMember
+# Protected member is being patched as a bug fix.
+from asyncio.proactor_events import _ProactorBasePipeTransport
+
 # Big thanks to https://github.com/paaksing for this snippet!
 # https://github.com/aio-libs/aiohttp/issues/4324
 # http://www.apache.org/licenses/LICENSE-2.0
-""" This code serves to fix a crash that specifically happens on windows due to the aiohttp 
-library using a different underlying mechanism on windows. See issue 4324 for more information."""
 
 
 def silence_event_loop_closed(func):
+    """ This code serves to fix a crash that specifically happens on windows due to the aiohttp
+    library using a different underlying mechanism on windows. See issue 4324 for more information."""
     @wraps(func)
     def wrapper(self, *args, **kwargs):
+        """Wraps the incoming function with an exception handler"""
+
         try:
             return func(self, *args, **kwargs)
         except RuntimeError as e:
@@ -63,9 +66,10 @@ if platform.system() == 'Windows':
 # End Windows Development Fix
 
 
-# Discord.py Help Extension
 class CustomHelp(commands.MinimalHelpCommand):
+    """# Custom Discord Help Command"""
     async def send_pages(self):
+        """Modified send_pages sends the information in an embed"""
         channel = self.get_destination()
         embed = discord.Embed(color=discord.Color.blurple(), description='')
         for page in self.paginator.pages:
@@ -73,8 +77,8 @@ class CustomHelp(commands.MinimalHelpCommand):
         await channel.send(embed=embed)
 
 
-# Discord.py Bot Extension
 class KateBot(commands.Bot):
+    """# Discord.py Bot Extension"""
     def __init__(self, Logger):
         # Create Dictionary from discord.json
         config = load_json_file('config/discord.json')
@@ -94,18 +98,19 @@ class KateBot(commands.Bot):
         self.logging = Logger
         self.logging.log('KateBot', "Initialized", verbose=True)
 
-    # Runs when successfully connected to Discord API
     async def on_ready(self):
+        """# Runs when successfully connected to Discord API"""
         self.logging.log('Discord', f'Logged in as {self.user}! {RS.random_heart()}')
 
-    # Create Exception Handler for command errors
     async def on_command_error(self, ctx, error):
+        """# Create Exception Handler for command errors"""
         self.logging.log("Discord", f"{error}\n"
                                     f" Author: [{ctx.author}]\n"
                                     f" Channel: [{ctx.channel}]", error=True)
 
 
 if __name__ == '__main__':
+    RS = RandomSymbols()
 
     # SQL Alchemy Setup
     engine = create_engine(f"sqlite:///database.db")
