@@ -53,3 +53,12 @@ You will need both a Discord Application Token, and a bunch of reddit data, look
 - asyncpraw  
 - discord.py  
 - PyNaCl (Required for music streaming over voice.)
+
+    
+## Todo
+- Cryptocurrency Module
+- AutoMod Module
+- Channel Module
+- XP Module
+- Embedding Module
+- Improve Reddit Module (Fix imgur, multi-immage, and video posts)
