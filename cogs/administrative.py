@@ -23,6 +23,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+import asyncio
 
 from discord.ext import commands
 from discord import Color, Embed
@@ -81,9 +82,11 @@ class Administration(commands.Cog):
         for m in messages:
             if 'all' in args:
                 self.KateBot.log('Discord', f'Deleting: {m.author.name}: {m.content}', self.KateBot.Log.Type.verbose)
+                await asyncio.sleep(1)
                 await m.delete()
             elif m.author.name in args:
                 self.KateBot.log('Discord', f'Deleting: {m.author.name}: {m.content}', self.KateBot.Log.Type.verbose)
+                await asyncio.sleep(1)
                 await m.delete()
 
     # Status Command

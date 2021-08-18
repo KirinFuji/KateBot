@@ -147,9 +147,9 @@ if __name__ == '__main__':
 
     # Logging Setup
     Logg = Log()
-    Logg.debug = False
-    Logg.verbose = False
-    Logg.milliseconds = False
+    Logg.debug = True
+    Logg.verbose = True
+    Logg.milliseconds = True
 
     # KateBot Setup
     KBot = KateBot(Logg)
@@ -157,6 +157,7 @@ if __name__ == '__main__':
     KBot.load_extension("cogs.music_player")
     KBot.load_extension("cogs.reddit")
     KBot.load_extension("cogs.reaction_roles")
+    KBot.load_extension('cogs.crypto_coins')
 
     # KBot.get_cog('reddit')
 

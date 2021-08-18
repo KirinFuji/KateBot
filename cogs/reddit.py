@@ -24,6 +24,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 # noinspection PyUnresolvedReferences
+import asyncio
+
 from KateLib import load_json_file  # IDE Error: main.py is being run from a level lower
 from discord.ext import commands
 import asyncpraw as async_praw
@@ -38,6 +40,8 @@ class RedditCog(commands.Cog):
         self.meme_stream = config['meme_stream']
         self.meme_stream_channel = config['meme_stream_channel']
         self.enabled = True
+        self.streams_registered = False
+        self.tasks = []
         self.reddit = async_praw.Reddit(
             client_id=config['client_id'],
             client_secret=config['client_secret'],
@@ -55,8 +59,9 @@ class RedditCog(commands.Cog):
     async def on_ready(self):
         """OnReady (Runs after discord login)"""
         await self.login_test()
-        if self.meme_stream:
+        if self.meme_stream and not self.streams_registered:
             self.register_streams()
+            self.streams_registered = True
 
     async def register_stream(self, _sub):
         """Creates an event loop submission stream"""
@@ -80,7 +85,9 @@ class RedditCog(commands.Cog):
         """Loop that spawns an event loop task for each subreddit."""
         for sub in self.subs:
             self.KateBot.log('Reddit', f'Registering MemeStream (/r/{sub})', None)
-            self.KateBot.tasks.append(self.KateBot.loop.create_task(self.register_stream(sub)))
+            task = self.KateBot.loop.create_task(self.register_stream(sub))
+            task.set_name(sub)
+            self.tasks.append(task)
         self.KateBot.log('Reddit', 'All submission streams registered! ♥', self.KateBot.Log.Type.verbose)
 
     @commands.Cog.listener()
@@ -108,6 +115,27 @@ class RedditCog(commands.Cog):
                     elif payload.emoji.name == '👎':
                         await submission.downvote()
                         self.KateBot.log("Reddit", f'Down-Vote: {reddit_post}', None)
+
+    @commands.command(name='meme_stream')
+    @commands.guild_only()
+    async def meme_stream(self, ctx, *args):
+        """!meme_stream [on|off] toggles meme stream on or off"""
+        if "on" in args and not self.meme_stream:
+            self.meme_stream = True
+            self.streams_registered = True
+            self.register_streams()
+            self.KateBot.log("Reddit", "MemeStream enabled!", None)
+
+        elif "off" in args and self.meme_stream:
+            self.meme_stream = False
+            for task in self.tasks:
+                self.KateBot.log("Reddit", f"Cancelling task: {task.get_name()}", self.KateBot.Log.Type.verbose)
+                task.cancel()
+                await asyncio.sleep(1)
+                self.KateBot.log("Reddit", f"Cancelled: {task.cancelled()}", self.KateBot.Log.Type.verbose)
+                self.tasks.remove(task)
+            self.streams_registered = False
+            self.KateBot.log("Reddit", "MemeStream disabled!", None)
 
 
 def setup(KateBot):

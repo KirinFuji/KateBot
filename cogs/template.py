@@ -26,7 +26,6 @@ SOFTWARE.
 
 from discord.ext import commands
 
-
 class TemplateCog(commands.Cog):
     def __init__(self, KateBot):
         self.KateBot = KateBot

@@ -85,28 +85,39 @@ class ReactionRoles(commands.Cog):
 
     @commands.command(name="rr_disable")
     @commands.has_permissions(administrator=True)
-    async def disable(self, ctx):
+    async def rr_disable(self, ctx):
         """Disable Reaction Roles"""
         self.enabled = False
         self.KateBot.log("ReactionRoles", "Disabled", None)
 
     @commands.command(name="rr_enable")
     @commands.has_permissions(administrator=True)
-    async def enable(self, ctx):
+    async def rr_enable(self, ctx):
         """Enable Reaction Roles"""
         self.enabled = True
         self.KateBot.log("ReactionRoles", "Enabled", None)
 
+    @commands.command(name="rr_reload")
+    @commands.has_permissions(administrator=True)
+    async def rr_reload(self, ctx):
+        """Reload Reaction Roles Json"""
+        self.reactions = load_json_file('config/reactions.json', self.KateBot.Log)
+        self.KateBot.log("ReactionRoles", "Reloaded JSON!", None)
+        await ctx.channel.send("[ReactionRoles]: Reloaded JSON!")
 
 def setup(KateBot):
     #
     """Called by adding extension in main.py"""
+    KateBot.add_cog(ReactionRoles(KateBot))
 
+    """ Old Code from Before separation"""
+    """    
     try:
         if KateBot.cogs['RedditCog']:
             KateBot.add_cog(ReactionRoles(KateBot))
     except KeyError as err:
         KateBot.log("Reddit", "RedditCog missing!", KateBot.Log.Type.error)
         raise ModuleNotFoundError("Reactions Module Requires RedditCog")
+    """
 
 

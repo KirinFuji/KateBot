@@ -98,7 +98,7 @@ class Queue:
                     raise FileNotFoundError
             else:
                 await self.KateBot.set_idle()
-                self.KateBot.log("MusicPlayer", "Queue is empty!", self.KateBot.Log.Type.warning)
+                self.KateBot.log("MusicPlayer", "Queue is empty!", None)
 
     def dequeue(self, song):
         if song in self.songList:
