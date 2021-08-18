@@ -1,5 +1,13 @@
 # Written by github.com/KirinFuji
 
+#
+#     .-.                 .-.
+#    (_) )  .'-     /    (_) )-.            /
+#       /  /.-. ---/---.-.  / __)  .-._.---/---
+#     _/_.'(  |   /  ./.-'_/    `.(   )   /
+#  .  /   \ `-'-'/   (__.'/'      )`-'   /
+# (_.'     `-'         (_/  `----'
+
 """
 MIT License
 
@@ -72,6 +80,7 @@ class ReactionRoles(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
+        """Gets called when a discord reaction is removed"""
         if payload.user_id == self.KateBot.user.id:
             return
 
@@ -85,14 +94,14 @@ class ReactionRoles(commands.Cog):
 
     @commands.command(name="rr_disable")
     @commands.has_permissions(administrator=True)
-    async def rr_disable(self, ctx):
+    async def rr_disable(self, _ctx):
         """Disable Reaction Roles"""
         self.enabled = False
         self.KateBot.log("ReactionRoles", "Disabled", None)
 
     @commands.command(name="rr_enable")
     @commands.has_permissions(administrator=True)
-    async def rr_enable(self, ctx):
+    async def rr_enable(self, _ctx):
         """Enable Reaction Roles"""
         self.enabled = True
         self.KateBot.log("ReactionRoles", "Enabled", None)
@@ -105,8 +114,8 @@ class ReactionRoles(commands.Cog):
         self.KateBot.log("ReactionRoles", "Reloaded JSON!", None)
         await ctx.channel.send("[ReactionRoles]: Reloaded JSON!")
 
+
 def setup(KateBot):
-    #
     """Called by adding extension in main.py"""
     KateBot.add_cog(ReactionRoles(KateBot))
 
@@ -119,5 +128,3 @@ def setup(KateBot):
         KateBot.log("Reddit", "RedditCog missing!", KateBot.Log.Type.error)
         raise ModuleNotFoundError("Reactions Module Requires RedditCog")
     """
-
-

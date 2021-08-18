@@ -1,5 +1,13 @@
 # Written by github.com/KirinFuji
 
+#
+#     .-.                 .-.
+#    (_) )  .'-     /    (_) )-.            /
+#       /  /.-. ---/---.-.  / __)  .-._.---/---
+#     _/_.'(  |   /  ./.-'_/    `.(   )   /
+#  .  /   \ `-'-'/   (__.'/'      )`-'   /
+# (_.'     `-'         (_/  `----'
+
 """
 MIT License
 
@@ -56,9 +64,6 @@ def load_json_file(filename, logger):
                 return load_json(F)
         except UnicodeEncodeError as err:
             logger.log('KateLib', f"Error Loading Json:\n  -{err}", logger.Type.error)
-
-
-
 
 
 class Log:
@@ -121,4 +126,3 @@ class Log:
                 elif self.error and log_type == self.Type.error:
                     print(colored(f'[{self.timestamp()}][{module}][ERROR]: {message}', 'red'))
                     return
-

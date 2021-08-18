@@ -1,7 +1,12 @@
 # Written by github.com/KirinFuji
 
-# NOTICE #
-# PyNaCl library needed in order to use MusicPlayer
+#
+#     .-.                 .-.
+#    (_) )  .'-     /    (_) )-.            /
+#       /  /.-. ---/---.-.  / __)  .-._.---/---
+#     _/_.'(  |   /  ./.-'_/    `.(   )   /
+#  .  /   \ `-'-'/   (__.'/'      )`-'   /
+# (_.'     `-'         (_/  `----'
 
 """
 MIT License
@@ -27,9 +32,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-
+# NOTICE #
+# PyNaCl library needed in order to use MusicPlayer
 from os.path import isdir
-from os import mkdir
 import discord
 from discord.ext import commands
 from sqlalchemy import create_engine
@@ -39,15 +44,13 @@ from functools import wraps
 from shutil import copytree
 
 # Windows Development Fix
-# noinspection PyProtectedMember
-# Protected member is being patched as a bug fix.
-import platform
-from asyncio.proactor_events import _ProactorBasePipeTransport
-
-
 # Big thanks to https://github.com/paaksing for this snippet!
 # https://github.com/aio-libs/aiohttp/issues/4324
 # http://www.apache.org/licenses/LICENSE-2.0
+import platform
+# Protected member is being patched as a bug fix.
+# noinspection PyProtectedMember
+from asyncio.proactor_events import _ProactorBasePipeTransport
 
 
 def silence_event_loop_closed(func):
@@ -70,8 +73,6 @@ def silence_event_loop_closed(func):
 if platform.system() == 'Windows':
     # Silence the exception here.
     _ProactorBasePipeTransport.__del__ = silence_event_loop_closed(_ProactorBasePipeTransport.__del__)
-
-
 # End Windows Development Fix
 
 
@@ -84,7 +85,6 @@ class KateBot(commands.Bot):
         self.token = config['token']
         if self.token == "<token>":
             raise ValueError("You must fill out discord.json!!")
-            exit(1)
         # Setup Gateway Intents
         intent = discord.Intents.default()
         intent.members = config['members_intent']
@@ -103,7 +103,6 @@ class KateBot(commands.Bot):
         self.log = self.Log.log
         self.log('KateBot', "Initialized", self.Log.Type.verbose)
 
-
     async def on_ready(self):
         """Runs when successfully connected to Discord API"""
         self.log('Discord', f'Logged in as {self.user}! {RS.random_heart()}', None)
@@ -116,18 +115,19 @@ class KateBot(commands.Bot):
                             self.Log.Type.error)
 
     async def set_listening(self, text):
+        """Changes discord presence to listening to <song>"""
         da = discord.ActivityType
         await self.change_presence(activity=discord.Activity(type=da.listening, name=text.replace('.mp3', '')))
 
     async def set_idle(self):
+        """Removes discord presence"""
         da = discord.ActivityType
         await self.change_presence(activity=discord.Activity(type=da.listening, name=''))
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     if not isdir('config/'):
         try:
-            #mkdir('./config/')
             copytree('config-samples', 'config')
         except FileExistsError:
             pass
@@ -135,7 +135,6 @@ if __name__ == '__main__':
             print(f"Error Creating Config Directory: {err}")
         print("Config Files Generated @ config/ please fill them out!")
         exit(1)
-
 
     RS = RandomSymbols()
 

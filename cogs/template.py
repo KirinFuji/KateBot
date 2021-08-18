@@ -1,5 +1,13 @@
 # Written by github.com/KirinFuji
 
+#
+#     .-.                 .-.
+#    (_) )  .'-     /    (_) )-.            /
+#       /  /.-. ---/---.-.  / __)  .-._.---/---
+#     _/_.'(  |   /  ./.-'_/    `.(   )   /
+#  .  /   \ `-'-'/   (__.'/'      )`-'   /
+# (_.'     `-'         (_/  `----'
+
 """
 MIT License
 
@@ -26,20 +34,25 @@ SOFTWARE.
 
 from discord.ext import commands
 
+
 class TemplateCog(commands.Cog):
+    """Basic cog template"""
     def __init__(self, KateBot):
         self.KateBot = KateBot
         self.KateBot.Log.log("TemplateCog", "Initialized", verbose=True, force=True)
 
     @commands.command(name="test2")
     # @commands.has_role("Mod")
-    async def test2(self, ctx):
+    async def test2(self, _ctx):
+        """Sample cog command"""
         self.KateBot.Log.log("TemplateCog", "Initialized", verbose=True, force=True)
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        """Sample cog listener"""
         print(message.content)
 
 
 def setup(KateBot):
+    """Adds the cog to the bot"""
     KateBot.add_cog(TemplateCog(KateBot))

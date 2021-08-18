@@ -1,5 +1,13 @@
 # Written by github.com/KirinFuji
 
+#
+#     .-.                 .-.
+#    (_) )  .'-     /    (_) )-.            /
+#       /  /.-. ---/---.-.  / __)  .-._.---/---
+#     _/_.'(  |   /  ./.-'_/    `.(   )   /
+#  .  /   \ `-'-'/   (__.'/'      )`-'   /
+# (_.'     `-'         (_/  `----'
+
 """
 MIT License
 
@@ -28,7 +36,7 @@ import asyncio
 from discord.ext import commands
 from discord import Color, Embed
 # noinspection PyUnresolvedReferences
-from KateLib import RandomSymbols # IDE Error: main.py is being run from a level lower
+from KateLib import RandomSymbols  # IDE Error: main.py is being run from a level lower
 
 
 class CustomHelp(commands.MinimalHelpCommand):
@@ -64,7 +72,7 @@ class Administration(commands.Cog):
 
     @commands.command(name="restart")
     @commands.has_permissions(administrator=True)
-    async def restart(self, ctx):
+    async def restart(self, _ctx):
         """Restarts KateBot (Admin Only)"""
         try:
             await self.KateBot.close()
@@ -90,14 +98,15 @@ class Administration(commands.Cog):
                 await m.delete()
 
     # Status Command
-    @commands.command(name="status", pass_context=True)
+    @commands.command(name="status")
     @commands.guild_only()
-    async def status(self, ctx, *args):
+    async def status(self, ctx):
         """Is the bot still alive command."""
         await ctx.channel.send(f'I\'m still here, {ctx.author.name}! {self.RS.random_heart()}')
 
 
 def setup(KateBot):
+    """Add cog to bot"""
     cog = Administration(KateBot)
     KateBot.help_command = CustomHelp()
     KateBot.add_cog(cog)
