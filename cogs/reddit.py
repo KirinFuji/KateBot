@@ -40,7 +40,7 @@ import asyncpraw as async_praw
 from discord import Embed
 
 
-class RedditCog(commands.Cog):
+class Reddit(commands.Cog):
     """AsyncPraw Reddit Cog"""
     def __init__(self, KateBot):
         self.KateBot = KateBot
@@ -159,7 +159,7 @@ class RedditCog(commands.Cog):
 
 def setup(KateBot):
     """Create Cog object and add it to KateBot"""
-    reddit_instance = RedditCog(KateBot)
+    reddit_instance = Reddit(KateBot)
     KateBot.reddit = reddit_instance.reddit
     KateBot.add_cog(reddit_instance)
 

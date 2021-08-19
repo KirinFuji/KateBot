@@ -62,32 +62,37 @@ class Queue:
         """!enqueue adds a single song to the queue"""
         self.songList.append(song)
 
-    def pause(self, client):
+    def pause(self, voice_client):
         """Pauses music playback"""
-        if client.is_playing():
-            client.pause()
+        if voice_client.is_playing():
+            voice_client.pause()
             self.paused = True
 
-    def next(self, client):
+    def playing(self, voice_client):
+        """Informs user of currently playing track"""
+        if voice_client.is_playing():
+            voice_client.
+
+    def next(self, voice_client):
         """Skips current song and plays next in queue"""
-        if client.is_playing():
-            client.stop()
+        if voice_client.is_playing():
+            voice_client.stop()
             self.isPlaying = False
 
-    async def stop(self, client):
+    async def stop(self, voice_client):
         """Stops playback and empties queue"""
-        if client.is_playing():
+        if voice_client.is_playing():
             self.songList = []
             self.isPlaying = False
-            client.stop()
+            voice_client.stop()
             await self.KateBot.set_idle()
 
-    def resume(self, client):
+    def resume(self, voice_client):
         """Resumes playback from pause"""
-        client.resume()
+        voice_client.resume()
         self.paused = False
 
-    async def play(self, client, song=None):
+    async def play(self, voice_client, song=None):
         """Main function for music player and queue"""
         if song is not None and song not in self.songList:
             self.KateBot.log("MusicPlayer", f"Queued Song: {song}", self.KateBot.Log.Type.verbose)
@@ -100,8 +105,8 @@ class Queue:
                 if path.isfile(full_path):
                     self.KateBot.log("MusicPlayer", f"Playing Song: {self.currentSong}", None)
                     audio_source = FFmpegPCMAudio(full_path, executable=self.ffmpeg)
-                    client.play(PCMVolumeTransformer(audio_source, 0.8),
-                                after=lambda x: self.play_next(client))
+                    voice_client.play(PCMVolumeTransformer(audio_source, 0.8),
+                                after=lambda x: self.play_next(voice_client))
                     self.isPlaying = True
                     await self.KateBot.set_listening(self.currentSong)
                 else:
@@ -119,18 +124,18 @@ class Queue:
             self.KateBot.log("MusicPlayer", f"Removed: {song} from queue.", self.KateBot.Log.Type.verbose)
         self.KateBot.log("MusicPlayer", f"{song} not in queue.", self.KateBot.Log.Type.warning)
 
-    def play_next(self, client):
+    def play_next(self, voice_client):
         """Workaround for calling async method from lambda"""
         self.KateBot.log("MusicPlayer", f"Song Finished: {self.currentSong}", self.KateBot.Log.Type.verbose)
         self.isPlaying = False
         # Workaround to call asynchronous method from lambda
-        run_coroutine_threadsafe(self.play(client), self.KateBot.loop)
+        run_coroutine_threadsafe(self.play(voice_client), self.KateBot.loop)
 
-    async def play_playlist(self, client, playlist):
+    async def play_playlist(self, voice_client, playlist):
         """Replace queue with a new playlist"""
         if len(playlist) > 0:
             self.songList = playlist
-            await self.play(client)
+            await self.play(voice_client)
 
     def random_song_list(self, count):
         """generates a queue of <count> random songs"""
@@ -175,8 +180,8 @@ class MusicPlayer(commands.Cog):
     @commands.guild_only()
     async def leave_voice(self, _ctx):
         """Leaves all connected voice channels"""
-        for client in self.KateBot.voice_clients:
-            await client.disconnect()
+        for voice_client in self.KateBot.voice_clients:
+            await voice_client.disconnect()
 
     @commands.command(name="play", pass_context=False)
     @commands.guild_only()
