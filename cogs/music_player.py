@@ -39,7 +39,7 @@ from os import listdir, path
 from os.path import isfile, join
 from random import randint
 # noinspection PyUnresolvedReferences
-from KateLib import load_json_file  # IDE Error: main.py is being run from a level lower
+from KateLib import load_json_file, RandomSymbols  # IDE Error: main.py is being run from a level lower
 
 
 class Queue:
@@ -67,11 +67,6 @@ class Queue:
         if voice_client.is_playing():
             voice_client.pause()
             self.paused = True
-
-    def playing(self, voice_client):
-        """Informs user of currently playing track"""
-        if voice_client.is_playing():
-            voice_client.
 
     def next(self, voice_client):
         """Skips current song and plays next in queue"""
@@ -152,6 +147,7 @@ class MusicPlayer(commands.Cog):
     def __init__(self, KateBot):
         self.KateBot = KateBot
         self.queue = Queue(self.KateBot)
+        self.Queues = {}
         self.enabled = True
         self.loaded = False
         self.KateBot.log("MusicPlayer", "Initialized", self.KateBot.Log.Type.debug)
@@ -183,7 +179,7 @@ class MusicPlayer(commands.Cog):
         for voice_client in self.KateBot.voice_clients:
             await voice_client.disconnect()
 
-    @commands.command(name="play", pass_context=False)
+    @commands.command(name="play")
     @commands.guild_only()
     async def play_music(self, _ctx, *args):
         """!play <filename> plays an mp3 from disk"""
@@ -192,41 +188,55 @@ class MusicPlayer(commands.Cog):
             if len(self.KateBot.voice_clients) > 0:
                 await self.queue.play(self.KateBot.voice_clients[0], song=mp3)
 
-    @commands.command(name='random_music', pass_context=False)
+    @commands.command(name='random_music')
     @commands.guild_only()
     async def random_music(self, _ctx):
         """Generates a queue of 5 random songs"""
         if len(self.KateBot.voice_clients) > 0:
             await self.queue.play_playlist(self.KateBot.voice_clients[0], self.queue.random_song_list(5))
 
-    @commands.command(name='stop', pass_context=False)
+    @commands.command(name='stop')
     @commands.guild_only()
     async def stop_music(self, _ctx):
         """Stops playback and empties queue"""
         if len(self.KateBot.voice_clients) > 0:
             await self.queue.stop(self.KateBot.voice_clients[0])
 
-    @commands.command(name='next', pass_context=False)
+    @commands.command(name='next')
     @commands.guild_only()
     async def next_music(self, _ctx):
         """Skips current song and plays next in queue"""
         if len(self.KateBot.voice_clients) > 0:
             self.queue.next(self.KateBot.voice_clients[0])
 
-    @commands.command(name='pause', pass_context=False)
+    @commands.command(name='pause')
     @commands.guild_only()
     async def pause_music(self, _ctx):
         """Pauses music playback"""
         if len(self.KateBot.voice_clients) > 0:
             self.queue.pause(self.KateBot.voice_clients[0])
 
-    @commands.command(name='resume', pass_context=False)
+    @commands.command(name='resume')
     @commands.guild_only()
     # noinspection PyUnusedLocal
     async def resume_music(self, _ctx):
         """Resumes music playback"""
         if len(self.KateBot.voice_clients) > 0:
             self.queue.resume(self.KateBot.voice_clients[0])
+
+    @commands.command(name='current')
+    @commands.guild_only()
+    async def current(self, ctx):
+        """Informs user of currently playing track"""
+        search = list(filter(lambda c: (c.guild == ctx.guild), self.KateBot.voice_clients))
+        if len(search) != 1:
+            self.KateBot.log("MusicPlayer", "Voice Client not found!", self.KateBot.Log.Type.error)
+        else:
+            voice_client = search[0]
+            # queue = self.Queues[ctx.guild] ## Saved for future use when MusicPlayer becomes multi-guild cappable
+            if voice_client.is_playing():
+                track = self.queue.currentSong
+                await ctx.channel.send(f"Currently Playing: {track}! {RandomSymbols.random_heart()}")
 
 
 def setup(KateBot):
