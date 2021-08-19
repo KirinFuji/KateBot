@@ -50,6 +50,7 @@ You will need both a Discord Application Token, and a bunch of reddit data, look
 
 
 ## Dependencies
+- Tested/Developed on Python 3.9
 - asyncpraw  
 - discord.py  
 - PyNaCl (Required for music streaming over voice.)
