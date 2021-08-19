@@ -58,7 +58,8 @@ class ReactionRoles(commands.Cog):
             self.loaded = True
             Log.log("ReactionRoles", "Loaded", Log.Type.verbose)
 
-    async def reaction_role(self, payload, emoji, role_name, remove=False):
+    @staticmethod
+    async def reaction_role(payload, emoji, role_name, remove=False):
         """Primary Logic flow for adding/removing roles"""
         Log.log("ReactionRoles", f"\n  -Emoji: {payload.emoji.name} | {emoji}"
                                  f"\n  -Role: {role_name}"
@@ -76,7 +77,7 @@ class ReactionRoles(commands.Cog):
                     Log.log("ReactionRoles", f"({role_name}) removed from ({payload.member})", None)
             else:
                 Log.log("ReactionRoles", f"Role ({role_name}) not found in guild ({payload.member.guild})",
-                                 Log.Log.Type.error)
+                        Log.Type.error)
                 raise TypeError(f"({role_name}) not found in guild ({payload.member.guild})")
 
     @commands.Cog.listener()

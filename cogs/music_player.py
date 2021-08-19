@@ -40,6 +40,8 @@ from os.path import isfile, join
 from random import randint
 # noinspection PyUnresolvedReferences
 from KateLib import load_json_file, RandomSymbols, Log  # IDE Error: main.py is being run from a level lower
+# noinspection PyUnresolvedReferences
+from KateLib import RandomSymbols as Rs
 
 
 class Queue:
@@ -243,7 +245,7 @@ class MusicPlayer(commands.Cog):
         if len(self.KateBot.voice_clients) > 0:
             self.queue.resume(self.KateBot.voice_clients[0])
 
-    @commands.command(name='current')
+    @commands.command(name='current', aliases=['playing'])
     @commands.guild_only()
     async def current(self, ctx):
         """Informs user of currently playing track"""
@@ -255,7 +257,7 @@ class MusicPlayer(commands.Cog):
             # queue = self.Queues[ctx.guild] ## Saved for future use when MusicPlayer becomes multi-guild capable
             if voice_client.is_playing():
                 track = self.queue.currentSong
-                await ctx.channel.send(f"Currently Playing: [{track}]! {RandomSymbols.random_heart()}")
+                await ctx.channel.send(f"Currently Playing: [ {track.replace('.mp3', '')} ]! {Rs.random_heart()}")
 
 
 def setup(KateBot):

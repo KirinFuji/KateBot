@@ -148,7 +148,7 @@ if __name__ == '__main__':
     session = Session()
 
     # Logging Setup
-    Log.debug = True
+    Log.verbose = True
     Log_CFG = load_json_file('config/logging.json')
     Log.verbose = Log_CFG['verbose']
     Log.debug = Log_CFG['debug']

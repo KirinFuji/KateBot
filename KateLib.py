@@ -86,12 +86,12 @@ def load_json_file(filename):
 class Log:
     """Custom Logging Class"""
 
-    class Colors(Enum):
+    class Colors:
         """Enum for logging class colors"""
-        grey = 'white',
-        blue = 'blue',
-        white = None,
-        yellow = 'yellow',
+        grey = 'white'
+        blue = 'blue'
+        white = None
+        yellow = 'yellow'
         red = 'red'
 
     class Type(Enum):
@@ -130,17 +130,17 @@ class Log:
                 print(colored(f'[{cls.timestamp()}][{module}]{tag}: {message}', color))
             else:
                 if cls.verbose and log_type == cls.Type.verbose:
-                    print(colored(f'[{cls.timestamp()}][{module}]: {message}', 'white'))
+                    print(colored(f'[{cls.timestamp()}][{module}]: {message}', cls.Colors.grey))
                     return
                 elif cls.debug and log_type == cls.Type.debug:
-                    print(colored(f'[{cls.timestamp()}][{module}][DEBUG]: {message}', 'blue'))
+                    print(colored(f'[{cls.timestamp()}][{module}][DEBUG]: {message}', cls.Colors.blue))
                     return
                 elif cls.normal and log_type == cls.Type.normal:
                     print(f'[{cls.timestamp()}][{module}]: {message}')
                     return
                 elif cls.warning and log_type == cls.Type.warning:
-                    print(colored(f'[{cls.timestamp()}][{module}][WARN]: {message}', 'yellow'))
+                    print(colored(f'[{cls.timestamp()}][{module}][WARN]: {message}', cls.Colors.yellow))
                     return
                 elif cls.error and log_type == cls.Type.error:
-                    print(colored(f'[{cls.timestamp()}][{module}][ERROR]: {message}', 'red'))
+                    print(colored(f'[{cls.timestamp()}][{module}][ERROR]: {message}', cls.Colors.red))
                     return
