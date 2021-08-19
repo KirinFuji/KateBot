@@ -55,17 +55,16 @@ class Administration(commands.Cog):
     """Administrative commands for running the bot."""
     def __init__(self, KateBot):
         self.KateBot = KateBot
-        self.KateBot.log("Administration", "Initialized", self.KateBot.Log.Type.verbose)
         self.enabled = True
-        self.RS = RandomSymbols()
-        self.initialized = False
+        self.loaded = False
+        self.KateBot.log("Administration", "Initialized", self.KateBot.Log.Type.debug)
 
     @commands.Cog.listener()
     async def on_ready(self):
         """Register event loop"""
-        if not self.initialized:
-            self.initialized = True
-            self.KateBot.log("Administration", "Initialized", self.KateBot.Log.Type.verbose)
+        if not self.loaded:
+            self.loaded = True
+            self.KateBot.log("Administration", "Loaded", self.KateBot.Log.Type.verbose)
 
     # Shutdown Command
     @commands.command(name="shutdown", aliases=["quit", "logout"])
@@ -73,7 +72,7 @@ class Administration(commands.Cog):
     async def shutdown(self, ctx):
         """Shuts down KateBot! (Admin Only)"""
         try:
-            await ctx.channel.send(f'Bye! {self.RS.random_heart()}')
+            await ctx.channel.send(f'Bye! {RandomSymbols.random_heart()}')
             await self.KateBot.close()
         except RuntimeError as err:
             self.KateBot.Log.log("Discord", f"{err}")
@@ -112,7 +111,7 @@ class Administration(commands.Cog):
     @commands.guild_only()
     async def status(self, ctx):
         """Is the bot still alive command."""
-        await ctx.channel.send(f'I\'m still here, {ctx.author.name}! {self.RS.random_heart()}')
+        await ctx.channel.send(f'I\'m still here, {ctx.author.name}! {RandomSymbols.random_heart()}')
 
 
 def setup(KateBot):

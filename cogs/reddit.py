@@ -56,7 +56,8 @@ class RedditCog(commands.Cog):
             username=config['username'],
             password=config['password'])
         self.subs = config['monitored_subs']
-        self.initialized = False
+        self.loaded = False
+        self.KateBot.log("Reddit", "Initialized", self.KateBot.Log.Type.debug)
 
     async def login_test(self):
         """Checks Reddit token validity and permissions"""
@@ -71,15 +72,14 @@ class RedditCog(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         """OnReady (Runs after discord login)"""
-        if not self.initialized:
-            self.initialized = True
+        if not self.loaded:
+            self.loaded = True
             success = await self.login_test()
             if success:
                 if self.meme_stream and not self.streams_registered:
                     self.register_streams()
                     self.streams_registered = True
-            self.KateBot.log("Reddit", "Initialized", self.KateBot.Log.Type.verbose)
-
+            self.KateBot.log("Reddit", "Loaded", self.KateBot.Log.Type.verbose)
 
     async def register_stream(self, _sub):
         """Creates an event loop submission stream"""

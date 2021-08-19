@@ -47,16 +47,16 @@ class Queue:
     def __init__(self, KateBot):
         config = load_json_file('config/music_player.json', KateBot.Log)
         self.KateBot = KateBot
+        self.music_home = config['music_location']
+        self.ffmpeg = config['ffmpeg_location']
+        self.KateBot.log("Queue",
+                         f'\n    - ffmpeg_location: {self.ffmpeg}\n    - music_location: {self.music_home}',
+                         self.KateBot.Log.Type.debug)
         self.songList = []
         self.currentSong = None
         self.isPlaying = False
-        self.music_home = config['music_location']
-        self.ffmpeg = config['ffmpeg_location']
         self.paused = False
-        self.KateBot.log("Cog.MusicPlayer.Queue", "Initialized", self.KateBot.Log.Type.verbose)
-        self.KateBot.log("Cog.MusicPlayer.Queue",
-                         f'\n    - ffmpeg_location: {self.ffmpeg}\n    - music_location: {self.music_home}',
-                         self.KateBot.Log.Type.debug)
+        self.KateBot.log("Queue", "Initialized", self.KateBot.Log.Type.debug)
 
     def enqueue(self, song):
         """!enqueue adds a single song to the queue"""
@@ -147,16 +147,16 @@ class MusicPlayer(commands.Cog):
     def __init__(self, KateBot):
         self.KateBot = KateBot
         self.queue = Queue(self.KateBot)
-        self.KateBot.log("MusicPlayer", "Initialized", self.KateBot.Log.Type.verbose)
         self.enabled = True
-        self.initialized = False
+        self.loaded = False
+        self.KateBot.log("MusicPlayer", "Initialized", self.KateBot.Log.Type.debug)
 
     @commands.Cog.listener()
     async def on_ready(self):
         """Register event loop"""
-        if not self.initialized:
-            self.initialized = True
-            self.KateBot.log("MusicPlayer", "Initialized", self.KateBot.Log.Type.verbose)
+        if not self.loaded:
+            self.loaded = True
+            self.KateBot.log("MusicPlayer", "Loaded", self.KateBot.Log.Type.verbose)
 
     @commands.command(name="join")
     @commands.guild_only()

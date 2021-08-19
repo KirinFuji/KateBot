@@ -98,14 +98,17 @@ class KateBot(commands.Bot):
                               intents=intent)
         # Initialize additional objects
         self.tasks = []
-
         self.Log = Logger
         self.log = self.Log.log
-        self.log('KateBot', "Initialized", self.Log.Type.verbose)
+        self.log("KateBot", "Initialized", self.Log.Type.debug)
 
     async def on_ready(self):
         """Runs when successfully connected to Discord API"""
-        self.log('Discord', f'Logged in as {self.user}! {RS.random_heart()}', None)
+        self.log('Discord', f'Logged in as {self.user}! {RandomSymbols.random_heart()}', None)
+
+    async def on_disconnect(self):
+        """For seeing if any issues arise by timestamping the disconnects"""
+        self.log('Discord', 'Disconnected', self.Log.Type.warning)
 
     async def on_command_error(self, ctx, error):
         """Create Exception Handler for command errors"""

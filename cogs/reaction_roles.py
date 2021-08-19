@@ -46,8 +46,16 @@ class ReactionRoles(commands.Cog):
     def __init__(self, KateBot):
         self.reactions = load_json_file('config/reactions.json', KateBot.Log)
         self.KateBot = KateBot
-        self.KateBot.log("Cog.ReactionRoles", "Initialized", KateBot.Log.Type.verbose)
         self.enabled = True
+        self.loaded = False
+        self.KateBot.log("ReactionRoles", "Initialized", self.KateBot.Log.Type.debug)
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        """Register event loop"""
+        if not self.loaded:
+            self.loaded = True
+            self.KateBot.log("ReactionRoles", "Loaded", self.KateBot.Log.Type.verbose)
 
     async def reaction_role(self, payload, emoji, role_name, remove=False):
         """Primary Logic flow for adding/removing roles"""

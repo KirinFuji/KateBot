@@ -42,12 +42,28 @@ from enum import Enum
 
 class RandomSymbols:
     """Library of random Symbols :3"""
-    def __init__(self):
-        self.Hearts = ['❤', '🧡', '💛', '💚', '💙', '💜', '🤍']
+    Hearts = ['❤', '🧡', '💛', '💚', '💙', '💜', '🤍']
 
-    def random_heart(self):
+    @staticmethod
+    def random_heart():
         """Why wouldn't you want random hears?"""
-        return self.Hearts[randint(0, 6)]
+        return RandomSymbols.Hearts[randint(0, 6)]
+
+
+def safe_get(dictionary, *keys):
+    """For accessing deeply nested data from dictionaries"""
+    for key in keys:
+        try:
+            dictionary = dictionary[key]
+        except KeyError as err:
+            print(f"Dictionary KeyError!: {key} : {err}")
+            return None
+        except AttributeError as err:
+            print(f"Nested dictionary encountered non dict-type object @: {key}! : {err}")
+            return None
+        except TypeError:
+            return None
+    return dictionary
 
 
 def load_json_file(filename, logger):

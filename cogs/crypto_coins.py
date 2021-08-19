@@ -37,7 +37,7 @@ SOFTWARE.
 from json import loads
 from discord.ext import commands
 # noinspection PyUnresolvedReferences
-from KateLib import load_json_file  # IDE Error: main.py is being run from a level lower
+from KateLib import load_json_file, safe_get  # IDE Error: main.py is being run from a level lower
 import aiohttp
 import asyncio
 
@@ -52,7 +52,8 @@ class CryptoCoins(commands.Cog):
         self.coins = config['coins']
         self.price_alerts = config['price_alerts']
         self.default_headers = {"X-CMC_PRO_API_KEY": self.token, "Accept": "application/json"}
-        self.initialized = False
+        self.loaded = False
+        self.KateBot.log("CryptoCoins", "Initialized", self.KateBot.Log.Type.debug)
 
     async def periodic_coin_check(self):
         """Periodically fetches current crypto price and adds to crypto-feed channel"""
@@ -76,19 +77,36 @@ class CryptoCoins(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         """Register event loop"""
-        if not self.initialized:
-            self.initialized = True
-            self.KateBot.log("CryptoCoins", "Initialized", self.KateBot.Log.Type.verbose)
-            if self.price_alerts:
-                self.register_alerts()
+        if not self.loaded:
+            self.loaded = True
+            valid = await self.is_token_valid()
+            self.KateBot.log("CryptoCoins", f"API Key: {valid}", None)
+            if valid:
+                self.KateBot.log("CryptoCoins", "Loaded", self.KateBot.Log.Type.verbose)
+                if self.price_alerts:
+                    self.register_alerts()
+            else:
+                self.KateBot.log("CryptoCoins", "Failed to validate API token!", self.KateBot.Log.Type.error)
 
     async def fetch_coin(self, coinID):
-        """CoinMarketCap API"""
+        """CoinMarketCap API -- Single Currency Query by ID"""
         async with aiohttp.ClientSession(headers=self.default_headers) as session:
             parameters = {'id': str(coinID), 'convert': 'USD'}
             async with session.get('https://pro-api.coinmarketcap.com/v1/cryptocurrency/quotes/latest',
                                    params=parameters) as resp:
                 return loads(await resp.text())
+
+    async def is_token_valid(self):
+        """CoinMarketCap API -- Returns API key details and usage stats"""
+        async with aiohttp.ClientSession(headers=self.default_headers) as session:
+            async with session.get('https://pro-api.coinmarketcap.com/v1/key/info') as resp:
+                data = loads(await resp.text())
+                result = safe_get(data, 'status', 'error_code')
+                if result == 0:
+                    remaining = safe_get(data, 'data', 'usage', 'current_day', 'credits_left')
+                    if remaining is not None and remaining > 0:
+                        return True
+                return False
 
     @commands.command(name="price")
     @commands.guild_only()
