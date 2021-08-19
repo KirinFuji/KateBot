@@ -148,6 +148,7 @@ if __name__ == '__main__':
     session = Session()
 
     # Logging Setup
+    Log.debug = True
     Log_CFG = load_json_file('config/logging.json')
     Log.verbose = Log_CFG['verbose']
     Log.debug = Log_CFG['debug']
@@ -158,9 +159,9 @@ if __name__ == '__main__':
     Log.milliseconds = Log_CFG['milliseconds']
 
     # KateBot Setup
-    KBot_CFG = load_json_file('config/kate_bot.json')
+    Cogs = load_json_file('config/cogs.json')
     KBot = KateBot()
-    for key, value in KBot_CFG.items():
+    for key, value in Cogs.items():
         if value:
             KBot.load_extension(key)
 
