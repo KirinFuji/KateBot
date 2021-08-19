@@ -29,14 +29,14 @@ You will need both a Discord Application Token, and a bunch of reddit data, look
 - !Shutdown -- Gracefully shutdown.  
 - !Status - Is the bot still alive test command.  
 #### CryptoCoins  
-- !Price \<coin> -- Fetchs cryptocurrency information. (Not yet implemented)  
+- !Price \<coin_id> -- Fetchs cryptocurrency information.  
 #### MusicPlayer   
 - !Join \<Channel_ID> -- Joins a voice channel and creates a voice_client.  
 - !Leave -- Leaves all voice channels  
 - !Next -- Plays next song in queue.
 - !Pause -- Pauses music playback.
 - !Play \<MP3 Filename> -- Plays/queues an mp3 file. (Requires setup in discord.json)  
-- !Random_music <n of songs> -- Generates a queue of n random songs.
+- !Random_music \<n of songs> -- Generates a queue of n random songs.
 - !Resume -- Resume music playback.
 - !Stop -- Stops music playback and empties queue.  
 #### ReactionRoles  
@@ -46,7 +46,7 @@ You will need both a Discord Application Token, and a bunch of reddit data, look
 #### RedditCog  
 - !meme_stream \<on|off> -- Creates/Cancels background tasks for pulling Reddit submission streams.
 #### No Category  
-- !help <command|category> -- Use !help [command|category] for more info on a command or category.
+- !help \<command|category> -- Use !help [command|category] for more info on a command or category.
 
 
 ## Dependencies
