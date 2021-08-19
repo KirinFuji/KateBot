@@ -79,9 +79,9 @@ if platform.system() == 'Windows':
 class KateBot(commands.Bot):
     """Discord.py Bot Extension"""
 
-    def __init__(self, Logger):
+    def __init__(self):
         # Create Dictionary from discord.json
-        config = load_json_file('config/discord.json', Logger)
+        config = load_json_file('config/discord.json')
         self.token = config['token']
         if self.token == "<token>":
             raise ValueError("You must fill out discord.json!!")
@@ -98,24 +98,23 @@ class KateBot(commands.Bot):
                               intents=intent)
         # Initialize additional objects
         self.tasks = []
-        self.Log = Logger
-        self.log = self.Log.log
-        self.log("KateBot", "Initialized", self.Log.Type.debug)
+        Log.log("KateBot", "Initialized", Log.Type.debug)
 
     async def on_ready(self):
         """Runs when successfully connected to Discord API"""
-        self.log('Discord', f'Logged in as {self.user}! {RandomSymbols.random_heart()}', None)
+        Log.log('Discord', f'Logged in as {self.user}! {RandomSymbols.random_heart()}', None)
 
-    async def on_disconnect(self):
+    @staticmethod
+    async def on_disconnect():
         """For seeing if any issues arise by timestamping the disconnects"""
-        self.log('Discord', 'Disconnected', self.Log.Type.warning)
+        Log.log('Discord', 'Disconnected', Log.Type.warning)
 
     async def on_command_error(self, ctx, error):
         """Create Exception Handler for command errors"""
-        self.log("Discord", f"{error}\n"
+        Log.log("Discord", f"{error}\n"
                             f" Author: [{ctx.author}]\n"
                             f" Channel: [{ctx.channel}]",
-                            self.Log.Type.error)
+                            Log.Type.error)
 
     async def set_listening(self, text):
         """Changes discord presence to listening to <song>"""
@@ -139,7 +138,12 @@ if __name__ == '__main__':
         print("Config Files Generated @ config/ please fill them out!")
         exit(1)
 
-    RS = RandomSymbols()
+    RandomSymbols.Hearts.append('Test')
+    RandomSymbols.Hearts.append('Test1')
+    RandomSymbols.Hearts.append('Test2')
+    RandomSymbols.Hearts.append('Test3')
+    RandomSymbols.Hearts.append('Test4')
+    RandomSymbols.Hearts.append('Test5')
 
     # SQL Alchemy Setup
     engine = create_engine(f"sqlite:///database.db")
@@ -148,13 +152,13 @@ if __name__ == '__main__':
     session = Session()
 
     # Logging Setup
-    Logg = Log()
-    Logg.debug = True
-    Logg.verbose = True
-    Logg.milliseconds = True
+
+    Log.debug = False
+    Log.verbose = False
+    Log.milliseconds = True
 
     # KateBot Setup
-    KBot = KateBot(Logg)
+    KBot = KateBot()
     KBot.load_extension("cogs.administrative")
     KBot.load_extension("cogs.music_player")
     KBot.load_extension("cogs.reddit")

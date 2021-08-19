@@ -39,24 +39,25 @@ from os import listdir, path
 from os.path import isfile, join
 from random import randint
 # noinspection PyUnresolvedReferences
-from KateLib import load_json_file, RandomSymbols  # IDE Error: main.py is being run from a level lower
+from KateLib import load_json_file, RandomSymbols, Log  # IDE Error: main.py is being run from a level lower
 
 
 class Queue:
     """Music Player Queue"""
+
     def __init__(self, KateBot):
-        config = load_json_file('config/music_player.json', KateBot.Log)
+        config = load_json_file('config/music_player.json')
         self.KateBot = KateBot
         self.music_home = config['music_location']
         self.ffmpeg = config['ffmpeg_location']
-        self.KateBot.log("Queue",
-                         f'\n    - ffmpeg_location: {self.ffmpeg}\n    - music_location: {self.music_home}',
-                         self.KateBot.Log.Type.debug)
+        Log.log("Queue",
+                f'\n    - ffmpeg_location: {self.ffmpeg}\n    - music_location: {self.music_home}',
+                Log.Type.debug)
         self.songList = []
         self.currentSong = None
         self.isPlaying = False
         self.paused = False
-        self.KateBot.log("Queue", "Initialized", self.KateBot.Log.Type.debug)
+        Log.log("Queue", "Initialized", Log.Type.debug)
 
     def enqueue(self, song):
         """!enqueue adds a single song to the queue"""
@@ -90,7 +91,7 @@ class Queue:
     async def play(self, voice_client, song=None):
         """Main function for music player and queue"""
         if song is not None and song not in self.songList:
-            self.KateBot.log("MusicPlayer", f"Queued Song: {song}", self.KateBot.Log.Type.verbose)
+            Log.log("MusicPlayer", f"Queued Song: {song}", Log.Type.verbose)
             self.enqueue(song)
         if not self.isPlaying:
             if len(self.songList) > 0:
@@ -98,30 +99,30 @@ class Queue:
                 self.songList.pop(0)
                 full_path = f'{self.music_home}\\{self.currentSong}'
                 if path.isfile(full_path):
-                    self.KateBot.log("MusicPlayer", f"Playing Song: {self.currentSong}", None)
+                    Log.log("MusicPlayer", f"Playing Song: {self.currentSong}", None)
                     audio_source = FFmpegPCMAudio(full_path, executable=self.ffmpeg)
                     voice_client.play(PCMVolumeTransformer(audio_source, 0.8),
-                                after=lambda x: self.play_next(voice_client))
+                                      after=lambda x: self.play_next(voice_client))
                     self.isPlaying = True
                     await self.KateBot.set_listening(self.currentSong)
                 else:
-                    self.KateBot.log("MusicPlayer", f"Music file not found!: \n {full_path}",
-                                     self.KateBot.Log.Type.error)
+                    Log.log("MusicPlayer", f"Music file not found!: \n {full_path}",
+                            Log.Type.error)
                     raise FileNotFoundError
             else:
                 await self.KateBot.set_idle()
-                self.KateBot.log("MusicPlayer", "Queue is empty!", None)
+                Log.log("MusicPlayer", "Queue is empty!", None)
 
     def dequeue(self, song):
         """Remove single song from the queue"""
         if song in self.songList:
             self.songList.remove(song)
-            self.KateBot.log("MusicPlayer", f"Removed: {song} from queue.", self.KateBot.Log.Type.verbose)
-        self.KateBot.log("MusicPlayer", f"{song} not in queue.", self.KateBot.Log.Type.warning)
+            Log.log("MusicPlayer", f"Removed: {song} from queue.", Log.Type.verbose)
+        Log.log("MusicPlayer", f"{song} not in queue.", Log.Type.warning)
 
     def play_next(self, voice_client):
         """Workaround for calling async method from lambda"""
-        self.KateBot.log("MusicPlayer", f"Song Finished: {self.currentSong}", self.KateBot.Log.Type.verbose)
+        Log.log("MusicPlayer", f"Song Finished: {self.currentSong}", Log.Type.verbose)
         self.isPlaying = False
         # Workaround to call asynchronous method from lambda
         run_coroutine_threadsafe(self.play(voice_client), self.KateBot.loop)
@@ -134,7 +135,7 @@ class Queue:
 
     def random_song_list(self, count):
         """generates a queue of <count> random songs"""
-        self.KateBot.log("MusicPlayer", f"Generating Queue of {count} random songs!", self.KateBot.Log.Type.verbose)
+        Log.log("MusicPlayer", f"Generating Queue of {count} random songs!", Log.Type.verbose)
         only_files = [f for f in listdir(self.music_home) if isfile(join(self.music_home, f)) and f.endswith(".mp3")]
         song_list = []
         for i in range(count):
@@ -144,33 +145,34 @@ class Queue:
 
 class MusicPlayer(commands.Cog):
     """MusicPlayer Cog"""
+
     def __init__(self, KateBot):
         self.KateBot = KateBot
         self.queue = Queue(self.KateBot)
         self.Queues = {}
         self.enabled = True
         self.loaded = False
-        self.KateBot.log("MusicPlayer", "Initialized", self.KateBot.Log.Type.debug)
+        Log.log("MusicPlayer", "Initialized", Log.Type.debug)
 
     @commands.Cog.listener()
     async def on_ready(self):
         """Register event loop"""
         if not self.loaded:
             self.loaded = True
-            self.KateBot.log("MusicPlayer", "Loaded", self.KateBot.Log.Type.verbose)
+            Log.log("MusicPlayer", "Loaded", Log.Type.verbose)
 
     @commands.command(name="join")
     @commands.guild_only()
     async def join_voice(self, _ctx, *args):
         """!Join [channel_id] - Joins a discord voice channel"""
-        self.KateBot.log("MusicPlayer", f"Joining Channel: {args[0]}", self.KateBot.Log.Type.verbose)
+        Log.log("MusicPlayer", f"Joining Channel: {args[0]}", Log.Type.verbose)
         channel = self.KateBot.get_channel(int(args[0]))
         await channel.connect(timeout=60.0, reconnect=True)
         vc = self.KateBot.voice_clients[0]
-        self.KateBot.log("MusicPlayer", f"Voice Client: {vc}\n    - session_id: {vc.session_id}"
+        Log.log("MusicPlayer", f"Voice Client: {vc}\n    - session_id: {vc.session_id}"
                                         f"\n    - token: {vc.token}\n    - channel: {vc.channel}"
                                         f"\n    - loop: {vc.loop}\n    - guild: {vc.guild}"
-                                        f"\n    - user: {vc.user}", self.KateBot.Log.Type.debug)
+                                        f"\n    - user: {vc.user}", Log.Type.debug)
 
     @commands.command(name="leave")
     @commands.guild_only()
@@ -230,7 +232,7 @@ class MusicPlayer(commands.Cog):
         """Informs user of currently playing track"""
         search = list(filter(lambda c: (c.guild == ctx.guild), self.KateBot.voice_clients))
         if len(search) != 1:
-            self.KateBot.log("MusicPlayer", "Voice Client not found!", self.KateBot.Log.Type.error)
+            Log.log("MusicPlayer", "Voice Client not found!", Log.Type.error)
         else:
             voice_client = search[0]
             # queue = self.Queues[ctx.guild] ## Saved for future use when MusicPlayer becomes multi-guild cappable

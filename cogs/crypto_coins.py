@@ -37,7 +37,7 @@ SOFTWARE.
 from json import loads
 from discord.ext import commands
 # noinspection PyUnresolvedReferences
-from KateLib import load_json_file, safe_get  # IDE Error: main.py is being run from a level lower
+from KateLib import load_json_file, safe_get, Log  # IDE Error: main.py is being run from a level lower
 import aiohttp
 import asyncio
 
@@ -46,14 +46,14 @@ class CryptoCoins(commands.Cog):
     """CryptoCurrency cog (WIP)"""
     def __init__(self, KateBot):
         self.KateBot = KateBot
-        config = load_json_file('config/crypto.json', self.KateBot.Log)
+        config = load_json_file('config/crypto.json')
         self.token = config['token']
         self.crypto_feed = int(config['crypto_feed'])
         self.coins = config['coins']
         self.price_alerts = config['price_alerts']
         self.default_headers = {"X-CMC_PRO_API_KEY": self.token, "Accept": "application/json"}
         self.loaded = False
-        self.KateBot.log("CryptoCoins", "Initialized", self.KateBot.Log.Type.debug)
+        Log.log("CryptoCoins", "Initialized", Log.Type.debug)
 
     async def periodic_coin_check(self):
         """Periodically fetches current crypto price and adds to crypto-feed channel"""
@@ -80,13 +80,13 @@ class CryptoCoins(commands.Cog):
         if not self.loaded:
             self.loaded = True
             valid = await self.is_token_valid()
-            self.KateBot.log("CryptoCoins", f"API Key: {valid}", None)
+            Log.log("CryptoCoins", f"API Key: {valid}", None)
             if valid:
-                self.KateBot.log("CryptoCoins", "Loaded", self.KateBot.Log.Type.verbose)
+                Log.log("CryptoCoins", "Loaded", Log.Type.verbose)
                 if self.price_alerts:
                     self.register_alerts()
             else:
-                self.KateBot.log("CryptoCoins", "Failed to validate API token!", self.KateBot.Log.Type.error)
+                Log.log("CryptoCoins", "Failed to validate API token!", Log.Type.error)
 
     async def fetch_coin(self, coinID):
         """CoinMarketCap API -- Single Currency Query by ID"""

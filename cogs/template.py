@@ -34,7 +34,7 @@ SOFTWARE.
 
 from discord.ext import commands
 # noinspection PyUnresolvedReferences
-from KateLib import load_json_file, RandomSymbols  # IDE Error: main.py is being run from a level lower
+from KateLib import load_json_file, RandomSymbols, Log  # IDE Error: main.py is being run from a level lower
 
 
 class TemplateCog(commands.Cog):
@@ -42,21 +42,21 @@ class TemplateCog(commands.Cog):
     def __init__(self, KateBot):
         self.KateBot = KateBot
         self.loaded = False
-        self.KateBot.log("TemplateCog", "Initialized", self.KateBot.Log.Type.debug)
+        Log.log("TemplateCog", "Initialized", Log.Type.debug)
 
     @commands.command(name="template_command", aliases=["test_command", "test_command2"])
     @commands.has_role("Basic Access")
     async def test2(self, ctx):
         """Sample cog command"""
         ctx.channel.send(f"Hai! :D {RandomSymbols.random_heart()}")
-        self.KateBot.Log.log("TemplateCog", "TestCommand", verbose=True, force=True)
+        Log.log("TemplateCog", "TestCommand", Log.Type.debug)
 
     @commands.Cog.listener()
     async def on_ready(self):
         """Register event loop"""
         if not self.loaded:
             self.loaded = True
-            self.KateBot.log("TemplateCog", "Loaded", self.KateBot.Log.Type.verbose)
+            Log.log("TemplateCog", "Loaded", Log.Type.verbose)
 
 
 def setup(KateBot):

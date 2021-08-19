@@ -36,7 +36,7 @@ import asyncio
 from discord.ext import commands
 from discord import Color, Embed
 # noinspection PyUnresolvedReferences
-from KateLib import RandomSymbols  # IDE Error: main.py is being run from a level lower
+from KateLib import RandomSymbols, Log  # IDE Error: main.py is being run from a level lower
 
 
 class CustomHelp(commands.MinimalHelpCommand):
@@ -57,14 +57,14 @@ class Administration(commands.Cog):
         self.KateBot = KateBot
         self.enabled = True
         self.loaded = False
-        self.KateBot.log("Administration", "Initialized", self.KateBot.Log.Type.debug)
+        Log.log("Administration", "Initialized", Log.Type.debug)
 
     @commands.Cog.listener()
     async def on_ready(self):
         """Register event loop"""
         if not self.loaded:
             self.loaded = True
-            self.KateBot.log("Administration", "Loaded", self.KateBot.Log.Type.verbose)
+            Log.log("Administration", "Loaded", Log.Type.verbose)
 
     # Shutdown Command
     @commands.command(name="shutdown", aliases=["quit", "logout"])
@@ -75,8 +75,8 @@ class Administration(commands.Cog):
             await ctx.channel.send(f'Bye! {RandomSymbols.random_heart()}')
             await self.KateBot.close()
         except RuntimeError as err:
-            self.KateBot.Log.log("Discord", f"{err}")
-        self.KateBot.log("Discord", "Logging Out!", None)
+            Log.log("Discord", f"{err}")
+        Log.log("Discord", "Logging Out!", None)
 
     # Restart Command
     @commands.command(name="restart")
@@ -86,8 +86,8 @@ class Administration(commands.Cog):
         try:
             await self.KateBot.close()
         except RuntimeError as err:
-            self.KateBot.Log.log("Discord", f"{err}")
-        self.KateBot.log("Discord", "Logging Out!", None)
+            Log.log("Discord", f"{err}")
+        Log.log("Discord", "Logging Out!", None)
 
     # Cleanup Command
     @commands.command(name='cleanup', aliases=['clean', 'scrub'])
@@ -98,11 +98,11 @@ class Administration(commands.Cog):
         messages = await ctx.channel.history(limit=200).flatten()
         for m in messages:
             if 'all' in args:
-                self.KateBot.log('Discord', f'Deleting: {m.author.name}: {m.content}', self.KateBot.Log.Type.verbose)
+                Log.log('Discord', f'Deleting: {m.author.name}: {m.content}', Log.Type.verbose)
                 await asyncio.sleep(1)
                 await m.delete()
             elif m.author.name in args:
-                self.KateBot.log('Discord', f'Deleting: {m.author.name}: {m.content}', self.KateBot.Log.Type.verbose)
+                Log.log('Discord', f'Deleting: {m.author.name}: {m.content}', Log.Type.verbose)
                 await asyncio.sleep(1)
                 await m.delete()
 

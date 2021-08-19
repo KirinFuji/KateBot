@@ -35,7 +35,7 @@ SOFTWARE.
 from discord.ext import commands
 from discord.utils import get
 # noinspection PyUnresolvedReferences
-from KateLib import load_json_file  # IDE Error: main.py is being run from a level lower
+from KateLib import load_json_file, Log  # IDE Error: main.py is being run from a level lower
 
 
 class ReactionRoles(commands.Cog):
@@ -43,39 +43,40 @@ class ReactionRoles(commands.Cog):
     Reaction Roles
     This cog contains the code for parsing reactions.json and acting on incoming reactions.
     """
+
     def __init__(self, KateBot):
-        self.reactions = load_json_file('config/reactions.json', KateBot.Log)
+        self.reactions = load_json_file('config/reactions.json')
         self.KateBot = KateBot
         self.enabled = True
         self.loaded = False
-        self.KateBot.log("ReactionRoles", "Initialized", self.KateBot.Log.Type.debug)
+        Log.log("ReactionRoles", "Initialized", Log.Type.debug)
 
     @commands.Cog.listener()
     async def on_ready(self):
         """Register event loop"""
         if not self.loaded:
             self.loaded = True
-            self.KateBot.log("ReactionRoles", "Loaded", self.KateBot.Log.Type.verbose)
+            Log.log("ReactionRoles", "Loaded", Log.Type.verbose)
 
     async def reaction_role(self, payload, emoji, role_name, remove=False):
         """Primary Logic flow for adding/removing roles"""
-        self.KateBot.log("ReactionRoles", f"\n  -Emoji: {payload.emoji.name} | {emoji}"
-                                          f"\n  -Role: {role_name}"
-                                          f"\n  -Remove: {remove}"
-                                          f"\n  -Member: {payload.member}", self.KateBot.Log.Type.debug)
+        Log.log("ReactionRoles", f"\n  -Emoji: {payload.emoji.name} | {emoji}"
+                                 f"\n  -Role: {role_name}"
+                                 f"\n  -Remove: {remove}"
+                                 f"\n  -Member: {payload.member}", Log.Type.debug)
         if payload.emoji.name == emoji:
 
             role = get(payload.member.guild.roles, name=role_name)
             if role is not None:
                 if role not in payload.member.roles:
                     await payload.member.add_roles(role)
-                    self.KateBot.log("ReactionRoles", f"({role_name}) added to ({payload.member})", None)
+                    Log.log("ReactionRoles", f"({role_name}) added to ({payload.member})", None)
                 elif remove:
                     await payload.member.remove_roles(role)
-                    self.KateBot.log("ReactionRoles", f"({role_name}) removed from ({payload.member})", None)
+                    Log.log("ReactionRoles", f"({role_name}) removed from ({payload.member})", None)
             else:
-                self.KateBot.log("ReactionRoles", f"Role ({role_name}) not found in guild ({payload.member.guild})",
-                                 self.KateBot.Log.Type.error)
+                Log.log("ReactionRoles", f"Role ({role_name}) not found in guild ({payload.member.guild})",
+                                 Log.Log.Type.error)
                 raise TypeError(f"({role_name}) not found in guild ({payload.member.guild})")
 
     @commands.Cog.listener()
@@ -105,21 +106,21 @@ class ReactionRoles(commands.Cog):
     async def rr_disable(self, _ctx):
         """Disable Reaction Roles"""
         self.enabled = False
-        self.KateBot.log("ReactionRoles", "Disabled", None)
+        Log.log("ReactionRoles", "Disabled", None)
 
     @commands.command(name="rr_enable")
     @commands.has_permissions(administrator=True)
     async def rr_enable(self, _ctx):
         """Enable Reaction Roles"""
         self.enabled = True
-        self.KateBot.log("ReactionRoles", "Enabled", None)
+        Log.log("ReactionRoles", "Enabled", None)
 
     @commands.command(name="rr_reload")
     @commands.has_permissions(administrator=True)
     async def rr_reload(self, ctx):
         """Reload Reaction Roles Json"""
-        self.reactions = load_json_file('config/reactions.json', self.KateBot.Log)
-        self.KateBot.log("ReactionRoles", "Reloaded JSON!", None)
+        self.reactions = load_json_file('config/reactions.json')
+        Log.log("ReactionRoles", "Reloaded JSON!", None)
         await ctx.channel.send("[ReactionRoles]: Reloaded JSON!")
 
 
