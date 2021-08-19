@@ -57,6 +57,7 @@ class Queue:
         self.currentSong = None
         self.isPlaying = False
         self.paused = False
+        self.guild = 0
         Log.log("Queue", "Initialized", Log.Type.debug)
 
     def enqueue(self, song):
@@ -81,7 +82,7 @@ class Queue:
             self.songList = []
             self.isPlaying = False
             voice_client.stop()
-            await self.KateBot.set_idle()
+            # await self.KateBot.set_idle()  # Removed: Bot will be multi-server
 
     def resume(self, voice_client):
         """Resumes playback from pause"""
@@ -104,13 +105,13 @@ class Queue:
                     voice_client.play(PCMVolumeTransformer(audio_source, 0.8),
                                       after=lambda x: self.play_next(voice_client))
                     self.isPlaying = True
-                    await self.KateBot.set_listening(self.currentSong)
+                    # await self.KateBot.set_listening(self.currentSong)  # Removed: Bot will be multi-server
                 else:
                     Log.log("MusicPlayer", f"Music file not found!: \n {full_path}",
                             Log.Type.error)
                     raise FileNotFoundError
             else:
-                await self.KateBot.set_idle()
+                # await self.KateBot.set_idle()  # Removed: Bot will be multi-server
                 Log.log("MusicPlayer", "Queue is empty!", None)
 
     def dequeue(self, song):
@@ -154,6 +155,25 @@ class MusicPlayer(commands.Cog):
         self.loaded = False
         Log.log("MusicPlayer", "Initialized", Log.Type.debug)
 
+    @staticmethod
+    def dump_voice_client(vc):
+        """Dump voice client info"""
+        if Log.debug:
+            Log.log("MusicPlayer", f"Voice Client: {vc}\n    - session_id: {vc.session_id}"
+                                   f"\n    - token: {vc.token}\n    - channel: {vc.channel}"
+                                   f"\n    - loop: {vc.loop}\n    - guild: {vc.guild}"
+                                   f"\n    - user: {vc.user}", Log.Type.debug)
+
+    async def get_guild_voice_client(self, ctx):
+        """Get VoiceClient based on guild command was ran in"""
+        search = list(filter(lambda c: (c.guild == ctx.guild), self.KateBot.voice_clients))
+        if len(search) != 1:
+            Log.log("MusicPlayer", "Voice Client not found!", Log.Type.error)
+        else:
+            vc = search[0]
+            self.dump_voice_client(vc)
+            return vc
+
     @commands.Cog.listener()
     async def on_ready(self):
         """Register event loop"""
@@ -169,10 +189,7 @@ class MusicPlayer(commands.Cog):
         channel = self.KateBot.get_channel(int(args[0]))
         await channel.connect(timeout=60.0, reconnect=True)
         vc = self.KateBot.voice_clients[0]
-        Log.log("MusicPlayer", f"Voice Client: {vc}\n    - session_id: {vc.session_id}"
-                                        f"\n    - token: {vc.token}\n    - channel: {vc.channel}"
-                                        f"\n    - loop: {vc.loop}\n    - guild: {vc.guild}"
-                                        f"\n    - user: {vc.user}", Log.Type.debug)
+        self.dump_voice_client(vc)
 
     @commands.command(name="leave")
     @commands.guild_only()
@@ -235,10 +252,10 @@ class MusicPlayer(commands.Cog):
             Log.log("MusicPlayer", "Voice Client not found!", Log.Type.error)
         else:
             voice_client = search[0]
-            # queue = self.Queues[ctx.guild] ## Saved for future use when MusicPlayer becomes multi-guild cappable
+            # queue = self.Queues[ctx.guild] ## Saved for future use when MusicPlayer becomes multi-guild capable
             if voice_client.is_playing():
                 track = self.queue.currentSong
-                await ctx.channel.send(f"Currently Playing: {track}! {RandomSymbols.random_heart()}")
+                await ctx.channel.send(f"Currently Playing: [{track}]! {RandomSymbols.random_heart()}")
 
 
 def setup(KateBot):

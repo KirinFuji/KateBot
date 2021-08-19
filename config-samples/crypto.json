@@ -1,6 +1,6 @@
 {
-  "token": "<token>",
-  "crypto_feed": 1000000000000000,
-  "coins": [1,2,3],
-  "price_alerts": false
+    "token": "<token>",
+    "crypto_feed": 1000000000000000,
+    "coins": [1,2,3],
+    "price_alerts": false
 }

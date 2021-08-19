@@ -42,6 +42,7 @@ from sqlalchemy.orm import sessionmaker
 from KateLib import load_json_file, RandomSymbols, Log
 from functools import wraps
 from shutil import copytree
+from contextlib import suppress
 
 # Windows Development Fix
 # Big thanks to https://github.com/paaksing for this snippet!
@@ -73,6 +74,8 @@ def silence_event_loop_closed(func):
 if platform.system() == 'Windows':
     # Silence the exception here.
     _ProactorBasePipeTransport.__del__ = silence_event_loop_closed(_ProactorBasePipeTransport.__del__)
+
+
 # End Windows Development Fix
 
 
@@ -80,16 +83,18 @@ class KateBot(commands.Bot):
     """Discord.py Bot Extension"""
 
     def __init__(self):
-        # Create Dictionary from discord.json
+        # Check discord.json for default value
         config = load_json_file('config/discord.json')
         self.token = config['token']
         if self.token == "<token>":
             raise ValueError("You must fill out discord.json!!")
+
         # Setup Gateway Intents
         intent = discord.Intents.default()
         intent.members = config['members_intent']
         intent.typing = config['typing_intent']
         intent.presences = config['presences_intent']
+
         # Initialize inherited Bot class
         commands.Bot.__init__(self,
                               owner_ids=config['owner_ids'],
@@ -97,6 +102,7 @@ class KateBot(commands.Bot):
                               case_insensitive=config['case_insensitive'],
                               intents=intent)
         # Initialize additional objects
+
         self.tasks = []
         Log.log("KateBot", "Initialized", Log.Type.debug)
 
@@ -111,10 +117,7 @@ class KateBot(commands.Bot):
 
     async def on_command_error(self, ctx, error):
         """Create Exception Handler for command errors"""
-        Log.log("Discord", f"{error}\n"
-                            f" Author: [{ctx.author}]\n"
-                            f" Channel: [{ctx.channel}]",
-                            Log.Type.error)
+        Log.log("Discord", f"{error}\n Author: [{ctx.author}]\n Channel: [{ctx.channel}]", Log.Type.error)
 
     async def set_listening(self, text):
         """Changes discord presence to listening to <song>"""
@@ -128,22 +131,15 @@ class KateBot(commands.Bot):
 
 
 if __name__ == '__main__':
+    # Check for config/ files, if missing, create defaults
     if not isdir('config/'):
         try:
-            copytree('config-samples', 'config')
-        except FileExistsError:
-            pass
+            with suppress(FileExistsError):
+                copytree('config-samples', 'config')
         except OSError as err:
             print(f"Error Creating Config Directory: {err}")
         print("Config Files Generated @ config/ please fill them out!")
         exit(1)
-
-    RandomSymbols.Hearts.append('Test')
-    RandomSymbols.Hearts.append('Test1')
-    RandomSymbols.Hearts.append('Test2')
-    RandomSymbols.Hearts.append('Test3')
-    RandomSymbols.Hearts.append('Test4')
-    RandomSymbols.Hearts.append('Test5')
 
     # SQL Alchemy Setup
     engine = create_engine(f"sqlite:///database.db")
@@ -152,20 +148,21 @@ if __name__ == '__main__':
     session = Session()
 
     # Logging Setup
-
-    Log.debug = False
-    Log.verbose = False
-    Log.milliseconds = True
+    Log_CFG = load_json_file('config/logging.json')
+    Log.verbose = Log_CFG['verbose']
+    Log.debug = Log_CFG['debug']
+    Log.normal = Log_CFG['normal']
+    Log.warning = Log_CFG['warning']
+    Log.error = Log_CFG['error']
+    Log.enabled = Log_CFG['enabled']
+    Log.milliseconds = Log_CFG['milliseconds']
 
     # KateBot Setup
+    KBot_CFG = load_json_file('config/kate_bot.json')
     KBot = KateBot()
-    KBot.load_extension("cogs.administrative")
-    KBot.load_extension("cogs.music_player")
-    KBot.load_extension("cogs.reddit")
-    KBot.load_extension("cogs.reaction_roles")
-    KBot.load_extension('cogs.crypto_coins')
-
-    # KBot.get_cog('reddit')
+    for key, value in KBot_CFG.items():
+        if value:
+            KBot.load_extension(key)
 
     # Entry Point
     KBot.run(KBot.token)

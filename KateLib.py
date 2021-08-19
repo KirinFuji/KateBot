@@ -113,7 +113,7 @@ class Log:
 
     @staticmethod
     def timestamp():
-        """Create Constant Timestamp"""
+        """Create Consistent Timestamp"""
         if Log.milliseconds:
             return datetime.utcnow()
         else:

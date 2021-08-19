@@ -1,0 +1,9 @@
+{
+    "verbose": false,
+    "debug": false,
+    "normal": true,
+    "warning": true,
+    "error": true,
+    "enabled": true,
+    "milliseconds": false
+}
