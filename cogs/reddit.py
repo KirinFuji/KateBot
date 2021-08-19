@@ -138,7 +138,7 @@ class Reddit(commands.Cog):
 
     @commands.command(name='meme_stream')
     @commands.guild_only()
-    async def meme_stream(self, ctx, *args):
+    async def meme_stream(self, _ctx, *args):
         """!meme_stream [on|off] toggles meme stream on or off"""
         if "on" in args and not self.meme_stream:
             self.meme_stream = True
