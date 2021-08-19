@@ -10,7 +10,6 @@
 ![Sample](LogExample.png)
 
 ## Setup
-
 Fill out the .json files and copy them into the root of the config folder, then run the bot.  
 You will need both a Discord Application Token, and a bunch of reddit data, look up "AsyncPraw" quick start for an explanation on the data needed.  
 
@@ -22,7 +21,6 @@ You will need both a Discord Application Token, and a bunch of reddit data, look
 
 
 ## Commands
-
 #### Administration  
 - !Cleanup \<all|Username> -- Starts deleting messages in the channel it is run in.  
 - !Restart -- Restart the bot and reconnect to reddit and discord api's. (Not yet implemented)  
@@ -55,9 +53,9 @@ You will need both a Discord Application Token, and a bunch of reddit data, look
 - discord.py  
 - PyNaCl (Required for music streaming over voice.)
 
-    
+
 ## Todo
-- Cryptocurrency Module
+- Cryptocurrency Module (Add more functions)
 - AutoMod Module
 - Channel Module
 - XP Module
