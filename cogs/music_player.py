@@ -147,8 +147,16 @@ class MusicPlayer(commands.Cog):
     def __init__(self, KateBot):
         self.KateBot = KateBot
         self.queue = Queue(self.KateBot)
-        self.KateBot.log("Cog.MusicPlayer", "Initialized", self.KateBot.Log.Type.verbose)
+        self.KateBot.log("MusicPlayer", "Initialized", self.KateBot.Log.Type.verbose)
         self.enabled = True
+        self.initialized = False
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        """Register event loop"""
+        if not self.initialized:
+            self.initialized = True
+            self.KateBot.log("MusicPlayer", "Initialized", self.KateBot.Log.Type.verbose)
 
     @commands.command(name="join")
     @commands.guild_only()

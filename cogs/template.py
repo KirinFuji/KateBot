@@ -33,24 +33,29 @@ SOFTWARE.
 """
 
 from discord.ext import commands
+# noinspection PyUnresolvedReferences
+from KateLib import RandomSymbols  # IDE Error: main.py is being run from a level lower
 
 
 class TemplateCog(commands.Cog):
     """Basic cog template"""
     def __init__(self, KateBot):
         self.KateBot = KateBot
-        self.KateBot.Log.log("TemplateCog", "Initialized", verbose=True, force=True)
+        self.initialized = False
 
-    @commands.command(name="test2")
-    # @commands.has_role("Mod")
-    async def test2(self, _ctx):
+    @commands.command(name="template_command", aliases=["test_command", "test_command2"])
+    @commands.has_role("Basic Access")
+    async def test2(self, ctx):
         """Sample cog command"""
-        self.KateBot.Log.log("TemplateCog", "Initialized", verbose=True, force=True)
+        ctx.channel.send(f"Hai! :D {RandomSymbols.random_heart()}")
+        self.KateBot.Log.log("TemplateCog", "TestCommand", verbose=True, force=True)
 
     @commands.Cog.listener()
-    async def on_message(self, message):
-        """Sample cog listener"""
-        print(message.content)
+    async def on_ready(self):
+        """Register event loop"""
+        if not self.initialized:
+            self.initialized = True
+            self.KateBot.log("TemplateCog", "Initialized", self.KateBot.Log.Type.verbose)
 
 
 def setup(KateBot):

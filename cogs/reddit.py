@@ -32,25 +32,23 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-# noinspection PyUnresolvedReferences
 import asyncio
-
+# noinspection PyUnresolvedReferences
 from KateLib import load_json_file  # IDE Error: main.py is being run from a level lower
 from discord.ext import commands
 import asyncpraw as async_praw
 from discord import Embed
 
+
 class RedditCog(commands.Cog):
     """AsyncPraw Reddit Cog"""
     def __init__(self, KateBot):
         self.KateBot = KateBot
-        self.KateBot.log("Cog.Reddit", "Initialized", self.KateBot.Log.Type.verbose)
         config = load_json_file('config/reddit.json', KateBot.Log)
         self.meme_stream = config['meme_stream']
         self.meme_stream_channel = config['meme_stream_channel']
         self.enabled = True
         self.streams_registered = False
-        self.tasks = []
         self.reddit = async_praw.Reddit(
             client_id=config['client_id'],
             client_secret=config['client_secret'],
@@ -58,19 +56,30 @@ class RedditCog(commands.Cog):
             username=config['username'],
             password=config['password'])
         self.subs = config['monitored_subs']
+        self.initialized = False
 
     async def login_test(self):
         """Checks Reddit token validity and permissions"""
-        reddit_user = await self.reddit.user.me()
-        self.KateBot.log("Reddit", f"Logged in as {reddit_user.name} ReadOnly: {self.reddit.read_only}", None)
+        try:
+            reddit_user = await self.reddit.user.me()
+            self.KateBot.log("Reddit", f"Logged in as {reddit_user.name} ReadOnly: {self.reddit.read_only}", None)
+            return True
+        except Exception as err:
+            self.KateBot.log("Reddit", f"Login Error: {err}", self.KateBot.Log.Type.error)
+            return False
 
     @commands.Cog.listener()
     async def on_ready(self):
         """OnReady (Runs after discord login)"""
-        await self.login_test()
-        if self.meme_stream and not self.streams_registered:
-            self.register_streams()
-            self.streams_registered = True
+        if not self.initialized:
+            self.initialized = True
+            success = await self.login_test()
+            if success:
+                if self.meme_stream and not self.streams_registered:
+                    self.register_streams()
+                    self.streams_registered = True
+            self.KateBot.log("Reddit", "Initialized", self.KateBot.Log.Type.verbose)
+
 
     async def register_stream(self, _sub):
         """Creates an event loop submission stream"""
@@ -96,11 +105,12 @@ class RedditCog(commands.Cog):
             self.KateBot.log('Reddit', f'Registering MemeStream (/r/{sub})', None)
             task = self.KateBot.loop.create_task(self.register_stream(sub))
             task.set_name(sub)
-            self.tasks.append(task)
+            self.KateBot.tasks.append(task)
         self.KateBot.log('Reddit', 'All submission streams registered! ♥', self.KateBot.Log.Type.verbose)
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
+        """Up/Down Vote reaction listener"""
         # Ignore Self
         if payload.user_id == self.KateBot.user.id:
             return
@@ -137,12 +147,12 @@ class RedditCog(commands.Cog):
 
         elif "off" in args and self.meme_stream:
             self.meme_stream = False
-            for task in self.tasks:
+            for task in self.KateBot.tasks:
                 self.KateBot.log("Reddit", f"Cancelling task: {task.get_name()}", self.KateBot.Log.Type.verbose)
                 task.cancel()
                 await asyncio.sleep(1)
                 self.KateBot.log("Reddit", f"Cancelled: {task.cancelled()}", self.KateBot.Log.Type.verbose)
-                self.tasks.remove(task)
+                self.KateBot.tasks.remove(task)
             self.streams_registered = False
             self.KateBot.log("Reddit", "MemeStream disabled!", None)
 

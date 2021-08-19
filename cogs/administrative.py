@@ -55,10 +55,19 @@ class Administration(commands.Cog):
     """Administrative commands for running the bot."""
     def __init__(self, KateBot):
         self.KateBot = KateBot
-        self.KateBot.log("Cog.Administration", "Initialized", self.KateBot.Log.Type.verbose)
+        self.KateBot.log("Administration", "Initialized", self.KateBot.Log.Type.verbose)
         self.enabled = True
         self.RS = RandomSymbols()
+        self.initialized = False
 
+    @commands.Cog.listener()
+    async def on_ready(self):
+        """Register event loop"""
+        if not self.initialized:
+            self.initialized = True
+            self.KateBot.log("Administration", "Initialized", self.KateBot.Log.Type.verbose)
+
+    # Shutdown Command
     @commands.command(name="shutdown", aliases=["quit", "logout"])
     @commands.has_permissions(administrator=True)
     async def shutdown(self, ctx):
@@ -70,6 +79,7 @@ class Administration(commands.Cog):
             self.KateBot.Log.log("Discord", f"{err}")
         self.KateBot.log("Discord", "Logging Out!", None)
 
+    # Restart Command
     @commands.command(name="restart")
     @commands.has_permissions(administrator=True)
     async def restart(self, _ctx):
