@@ -233,7 +233,7 @@ class MusicPlayer(commands.Cog):
         if len(self.KateBot.voice_clients) > 0:
             await self.queue.stop(self.KateBot.voice_clients[0])
 
-    @commands.command(name='next')
+    @commands.command(name='skip')
     @commands.guild_only()
     async def next_music(self, _ctx):
         """Skips current song and plays next in queue"""
@@ -254,26 +254,47 @@ class MusicPlayer(commands.Cog):
         if len(self.KateBot.voice_clients) > 0:
             self.queue.resume(self.KateBot.voice_clients[0])
 
-    @commands.command(name='infinite')
+    @commands.command(name='queue')
     @commands.guild_only()
-    async def resume_music(self, _ctx):
-        """Resumes music playback"""
+    async def resume_music(self, ctx, *args):
+        """Checks queue length"""
         if len(self.KateBot.voice_clients) > 0:
-            self.queue.resume(self.KateBot.voice_clients[0])
+            if len(self.queue.songList) > 0:
+                if len(args) > 0:
+                    try:
+                        try:
+                            print(args)
+                            if 'song' == args[0]:
+                                await ctx.channel.send(f'Song: #{args[1]}, [ {self.queue.songList[int(args[1])]} ]')
+                        except ValueError as err:
+                            if err != 'invalid literal for int() with base 10':
+                                raise
+                        if 'length' == args[0]:
+                            await ctx.channel.send(f'Currently {len(self.queue.songList)}')
+                        if 'jump' == args[0]:
+                            count = int(args[1])
+                            for i in range(0, count):
+                                self.queue.songList.pop(0)
+                                print(self.queue.songList[i])
+                            await self.next_music(ctx)
+                    except IndexError:
+                        pass
 
     @commands.command(name='current', aliases=['playing'])
     @commands.guild_only()
     async def current(self, ctx):
         """Informs user of currently playing track"""
         search = list(filter(lambda c: (c.guild == ctx.guild), self.KateBot.voice_clients))
-        if len(search) != 1:
+        if len(search) == 0:
             Log.log("MusicPlayer", "Voice Client not found!", Log.Type.error)
-        else:
+        elif len(search) == 1:
             voice_client = search[0]
             # queue = self.Queues[ctx.guild] ## Saved for future use when MusicPlayer becomes multi-guild capable
             if voice_client.is_playing():
                 track = self.queue.currentSong
                 await ctx.channel.send(f"Currently Playing: [ {track.replace('.mp3', '')} ]! {Rs.random_heart()}")
+        elif len(search) > 1:
+            Log.log("MusicPlayer", "Duplicate match error.", Log.Type.error)
 
 
 def setup(KateBot):

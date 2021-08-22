@@ -48,7 +48,7 @@ class RandomSymbols:
     @staticmethod
     def random_heart():
         """Why wouldn't you want random hears?"""
-        return RandomSymbols.Hearts[randint(0, len(RandomSymbols.Hearts))]
+        return RandomSymbols.Hearts[randint(0, len(RandomSymbols.Hearts) - 1)]
 
 
 def safe_get(dictionary, *keys):
