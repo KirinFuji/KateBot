@@ -72,13 +72,13 @@ class Queue:
             voice_client.pause()
             self.paused = True
 
-    def next(self, voice_client):
+    def next_track(self, voice_client):
         """Skips current song and plays next in queue"""
         if voice_client.is_playing():
             voice_client.stop()
             self.isPlaying = False
 
-    async def stop(self, voice_client):
+    def stop(self, voice_client):
         """Stops playback and empties queue"""
         if voice_client.is_playing():
             self.songList = []
@@ -151,7 +151,6 @@ class MusicPlayer(commands.Cog):
 
     def __init__(self, KateBot):
         self.KateBot = KateBot
-        self.queue = Queue(self.KateBot)
         self.Queues = {}
         self.enabled = True
         self.loaded = False
@@ -185,35 +184,41 @@ class MusicPlayer(commands.Cog):
 
     @commands.command(name="join")
     @commands.guild_only()
-    async def join_voice(self, _ctx, *args):
+    async def join_voice(self, ctx, *args):
         """!Join [channel_id] - Joins a discord voice channel"""
         Log.log("MusicPlayer", f"Joining Channel: {args[0]}", Log.Type.verbose)
         channel = self.KateBot.get_channel(int(args[0]))
         await channel.connect(timeout=60.0, reconnect=True)
-        vc = self.KateBot.voice_clients[0]
-        self.dump_voice_client(vc)
+        voice_client = list(filter(lambda c: (c.guild == ctx.guild), self.KateBot.voice_clients))[0]
+        if voice_client:
+            self.dump_voice_client(voice_client)
+            self.Queues[ctx.guild] = Queue(self.KateBot)
 
     @commands.command(name="leave")
     @commands.guild_only()
-    async def leave_voice(self, _ctx):
+    async def leave_voice(self, ctx):
         """Leaves all connected voice channels"""
-        for voice_client in self.KateBot.voice_clients:
-            await voice_client.disconnect()
+        voice_client = list(filter(lambda c: (c.guild == ctx.guild), self.KateBot.voice_clients))[0]
+        await voice_client.disconnect()
+        self.Queues[ctx.guild] = None
 
     @commands.command(name="play")
     @commands.guild_only()
-    async def play_music(self, _ctx, *args):
+    async def play_music(self, ctx, *args):
         """!play <filename> plays an mp3 from disk"""
         if len(args) > 0:
             mp3 = args[0]
             if len(self.KateBot.voice_clients) > 0:
-                await self.queue.play(self.KateBot.voice_clients[0], song=mp3)
+                voice_client = list(filter(lambda c: (c.guild == ctx.guild), self.KateBot.voice_clients))[0]
+                await self.Queues[ctx.guild].play(voice_client, song=mp3)
+
 
     @commands.command(name='random_music')
     @commands.guild_only()
     async def random_music(self, ctx, *args):
         """Generates a queue of 5 random songs"""
         if len(self.KateBot.voice_clients) > 0:
+            count = 5
             if len(args) > 0:
                 try:
                     count = int(args[0])
@@ -222,60 +227,64 @@ class MusicPlayer(commands.Cog):
                         raise
                     else:
                         await ctx.channel.send("Argument must be a number!")
-            else:
-                count = 5
-            await self.queue.play_playlist(self.KateBot.voice_clients[0], self.queue.random_song_list(count))
+
+            voice_client = list(filter(lambda c: (c.guild == ctx.guild), self.KateBot.voice_clients))[0]
+            await self.Queues[ctx.guild].play_playlist(voice_client, self.Queues[ctx.guild].random_song_list(count))
 
     @commands.command(name='stop')
     @commands.guild_only()
-    async def stop_music(self, _ctx):
+    async def stop_music(self, ctx):
         """Stops playback and empties queue"""
-        if len(self.KateBot.voice_clients) > 0:
-            await self.queue.stop(self.KateBot.voice_clients[0])
+        voice_client = list(filter(lambda c: (c.guild == ctx.guild), self.KateBot.voice_clients))[0]
+        if voice_client:
+            self.Queues[ctx.guild].stop(voice_client)
 
     @commands.command(name='skip')
     @commands.guild_only()
-    async def next_music(self, _ctx):
+    async def next_music(self, ctx):
         """Skips current song and plays next in queue"""
-        if len(self.KateBot.voice_clients) > 0:
-            self.queue.next(self.KateBot.voice_clients[0])
+        voice_client = list(filter(lambda c: (c.guild == ctx.guild), self.KateBot.voice_clients))[0]
+        if voice_client:
+            self.Queues[ctx.guild].next_track(voice_client)
 
     @commands.command(name='pause')
     @commands.guild_only()
-    async def pause_music(self, _ctx):
+    async def pause_music(self, ctx):
         """Pauses music playback"""
-        if len(self.KateBot.voice_clients) > 0:
-            self.queue.pause(self.KateBot.voice_clients[0])
+        voice_client = list(filter(lambda c: (c.guild == ctx.guild), self.KateBot.voice_clients))[0]
+        if voice_client:
+            self.Queues[ctx.guild].pause(voice_client)
 
     @commands.command(name='resume')
     @commands.guild_only()
-    async def resume_music(self, _ctx):
+    async def resume_music(self, ctx):
         """Resumes music playback"""
-        if len(self.KateBot.voice_clients) > 0:
-            self.queue.resume(self.KateBot.voice_clients[0])
+        voice_client = list(filter(lambda c: (c.guild == ctx.guild), self.KateBot.voice_clients))[0]
+        if voice_client:
+            self.Queues[ctx.guild].resume(voice_client)
 
     @commands.command(name='queue')
     @commands.guild_only()
-    async def resume_music(self, ctx, *args):
-        """Checks queue length"""
+    async def queue_cmd(self, ctx, *args):
+        """!queue [command], [*args] - (length, *jump, *song)"""
         if len(self.KateBot.voice_clients) > 0:
-            if len(self.queue.songList) > 0:
+            if len(self.Queues[ctx.guild].songList) > 0:
                 if len(args) > 0:
                     try:
                         try:
                             print(args)
                             if 'song' == args[0]:
-                                await ctx.channel.send(f'Song: #{args[1]}, [ {self.queue.songList[int(args[1])]} ]')
+                                await ctx.channel.send(f'Song: #{args[1]}, [ {self.Queues[ctx.guild].songList[int(args[1])]} ]')
                         except ValueError as err:
                             if err != 'invalid literal for int() with base 10':
                                 raise
                         if 'length' == args[0]:
-                            await ctx.channel.send(f'Currently {len(self.queue.songList)}')
+                            await ctx.channel.send(f'Currently {len(self.Queues[ctx.guild].songList)}')
                         if 'jump' == args[0]:
                             count = int(args[1])
                             for i in range(0, count):
-                                self.queue.songList.pop(0)
-                                print(self.queue.songList[i])
+                                self.Queues[ctx.guild].songList.pop(0)
+                                print(self.Queues[ctx.guild].songList[i])
                             await self.next_music(ctx)
                     except IndexError:
                         pass
@@ -291,7 +300,7 @@ class MusicPlayer(commands.Cog):
             voice_client = search[0]
             # queue = self.Queues[ctx.guild] ## Saved for future use when MusicPlayer becomes multi-guild capable
             if voice_client.is_playing():
-                track = self.queue.currentSong
+                track = self.Queues[ctx.guild].currentSong
                 await ctx.channel.send(f"Currently Playing: [ {track.replace('.mp3', '')} ]! {Rs.random_heart()}")
         elif len(search) > 1:
             Log.log("MusicPlayer", "Duplicate match error.", Log.Type.error)
