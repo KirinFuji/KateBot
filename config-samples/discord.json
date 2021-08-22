@@ -7,5 +7,4 @@
     "typing_intent": false,
     "presences_intent": false,
     "case_insensitive": true,
-    "logging": true
 }

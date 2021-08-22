@@ -3,5 +3,6 @@
     "cogs.music_player": true,
     "cogs.reddit": true,
     "cogs.reaction_roles": true,
-    "cogs.crypto_coins": true
+    "cogs.crypto_coins": true,
+    "cogs.misc": true
 }

@@ -86,21 +86,40 @@ class Reddit(commands.Cog):
         """Creates an event loop submission stream"""
         subreddit = await self.reddit.subreddit(_sub)
         channel = self.KateBot.get_channel(self.meme_stream_channel)
-        async for submission in subreddit.stream.submissions(skip_existing=True):
+        async for submission in subreddit.stream.submissions(skip_existing=True, pause_after=0):
             try:
-                title = submission.title[:255]  # embed.title: Must be 256 or fewer in length
-                meme = Embed(title=title, url=f'https://www.reddit.com{submission.permalink}')
-                meme.set_image(url=submission.url)
-                Log.log('Reddit', f'({subreddit.display_name}) MemeStream: {meme.url}', None)
-                new_msg = await channel.send(content=None, embed=meme)
-                reactions = ['👍', '👎']
-                for emoji in reactions:
-                    await new_msg.add_reaction(emoji)
-                # await asyncio.sleep(10)
+                if submission is not None:
+                    title = submission.title[:255]  # embed.title: Must be 256 or fewer in length
+                    meme = Embed(title=title, url=f'https://www.reddit.com{submission.permalink}')
+                    meme.set_image(url=submission.url)
+                    #  Log.log('Reddit', f'({subreddit.display_name}) MemeStream: {meme.url}', None)
+                    Log.log('Reddit', f'MemeStream: {meme.url}', None)
+                    new_msg = await channel.send(content=None, embed=meme)
+                    reactions = ['👍', '👎']
+                    for emoji in reactions:
+                        await new_msg.add_reaction(emoji)
+                    await asyncio.sleep(10)
             except Exception as e:
                 print(f'Exception in register_stream: {e}')
 
     def register_streams(self):
+        """Loop that spawns a single event loop task with all subreddits combined."""
+        subs_s = ''
+        i = 0
+        for sub in self.subs:
+            Log.log('Reddit', f'Registering MemeStream (/r/{sub})', None)
+            if i == len(self.subs) - 1:
+                subs_s += sub
+            else:
+                subs_s += sub + "+"
+            i += 1
+
+        task = self.KateBot.loop.create_task(self.register_stream(subs_s))
+        task.set_name('reddit')
+        self.KateBot.tasks.append(task)
+        Log.log('Reddit', 'All submission streams registered! ♥', Log.Type.verbose)
+
+    def register_streams_old(self):
         """Loop that spawns an event loop task for each subreddit."""
         for sub in self.subs:
             Log.log('Reddit', f'Registering MemeStream (/r/{sub})', None)
@@ -148,7 +167,7 @@ class Reddit(commands.Cog):
 
         elif "off" in args and self.meme_stream:
             self.meme_stream = False
-            for task in self.KateBot.tasks:
+            for task in self.KateBot.tasks:  # This needs to be changed once more tasks are added
                 Log.log("Reddit", f"Cancelling task: {task.get_name()}", Log.Type.verbose)
                 task.cancel()
                 await asyncio.sleep(1)

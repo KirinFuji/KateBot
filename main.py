@@ -40,7 +40,7 @@ from discord.ext import commands
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from KateLib import load_json_file, RandomSymbols, Log
-from functools import wraps
+
 from shutil import copytree
 from contextlib import suppress
 
@@ -49,6 +49,7 @@ from contextlib import suppress
 # https://github.com/aio-libs/aiohttp/issues/4324
 # http://www.apache.org/licenses/LICENSE-2.0
 import platform
+from functools import wraps
 # Protected member is being patched as a bug fix.
 # noinspection PyProtectedMember
 from asyncio.proactor_events import _ProactorBasePipeTransport

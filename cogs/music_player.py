@@ -211,10 +211,20 @@ class MusicPlayer(commands.Cog):
 
     @commands.command(name='random_music')
     @commands.guild_only()
-    async def random_music(self, _ctx):
+    async def random_music(self, ctx, *args):
         """Generates a queue of 5 random songs"""
         if len(self.KateBot.voice_clients) > 0:
-            await self.queue.play_playlist(self.KateBot.voice_clients[0], self.queue.random_song_list(5))
+            if len(args) > 0:
+                try:
+                    count = int(args[0])
+                except ValueError as err:
+                    if err != 'invalid literal for int() with base 10':
+                        raise
+                    else:
+                        await ctx.channel.send("Argument must be a number!")
+            else:
+                count = 5
+            await self.queue.play_playlist(self.KateBot.voice_clients[0], self.queue.random_song_list(count))
 
     @commands.command(name='stop')
     @commands.guild_only()
@@ -239,7 +249,13 @@ class MusicPlayer(commands.Cog):
 
     @commands.command(name='resume')
     @commands.guild_only()
-    # noinspection PyUnusedLocal
+    async def resume_music(self, _ctx):
+        """Resumes music playback"""
+        if len(self.KateBot.voice_clients) > 0:
+            self.queue.resume(self.KateBot.voice_clients[0])
+
+    @commands.command(name='infinite')
+    @commands.guild_only()
     async def resume_music(self, _ctx):
         """Resumes music playback"""
         if len(self.KateBot.voice_clients) > 0:
