@@ -58,20 +58,12 @@ class Queue:
         self.songList = []
         self.currentSong = None
         self.isPlaying = False
-        self.paused = False
-        self.guild = 0
         self.source = None
         Log.log("Queue", "Initialized", Log.Type.debug)
 
     def enqueue(self, song):
         """!enqueue adds a single song to the queue"""
         self.songList.append(song)
-
-    def pause(self, voice_client):
-        """Pauses music playback"""
-        if voice_client.is_playing():
-            voice_client.pause()
-            self.paused = True
 
     def next_track(self, voice_client):
         """Skips current song and plays next in queue"""
@@ -86,11 +78,6 @@ class Queue:
             self.isPlaying = False
             voice_client.stop()
             # await self.KateBot.set_idle()  # Removed: Bot will be multi-server
-
-    def resume(self, voice_client):
-        """Resumes playback from pause"""
-        voice_client.resume()
-        self.paused = False
 
     async def play(self, voice_client, song=None):
         """Main function for music player and queue"""
@@ -258,7 +245,7 @@ class MusicPlayer(commands.Cog):
         """Pauses music playback"""
         voice_client = self.get_guild_voice_client(ctx)
         if voice_client:
-            self.Queues[ctx.guild].pause(voice_client)
+            voice_client.pause()
 
     @commands.command(name='resume')
     @commands.guild_only()
@@ -266,7 +253,7 @@ class MusicPlayer(commands.Cog):
         """Resumes music playback"""
         voice_client = self.get_guild_voice_client(ctx)
         if voice_client:
-            self.Queues[ctx.guild].resume(voice_client)
+            voice_client.resume()
 
     @commands.command(name='volume')
     @commands.guild_only()
