@@ -128,7 +128,7 @@ class Reddit(commands.Cog):
             self.KateBot.tasks.append(task)
         Log.log('Reddit', 'All submission streams registered! ♥', Log.Type.verbose)
 
-    @commands.Cog.listener()
+    @commands.Cog.listener()  # Needs a 404 exception handler asyncprawcore.exceptions.NotFound
     async def on_raw_reaction_add(self, payload):
         """Up/Down Vote reaction listener"""
         # Ignore Self
