@@ -47,8 +47,17 @@ class RandomSymbols:
 
     @staticmethod
     def random_heart():
-        """Why wouldn't you want random hears?"""
+        """Why wouldn't you want random hearts?"""
         return RandomSymbols.Hearts[randint(0, len(RandomSymbols.Hearts) - 1)]
+
+
+def safe_cast(value, __class, default=None):
+    """Try, cast, handle"""
+    try:
+        return __class(value)
+    except (ValueError, TypeError) as err:
+        print(f'Error casting {value} as {__class}: {err}')
+        return default
 
 
 def safe_get(dictionary, *keys):
