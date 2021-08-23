@@ -99,11 +99,11 @@ class Administration(commands.Cog):
         for m in messages:
             if 'all' in args:
                 Log.log('Discord', f'Deleting: {m.author.name}: {m.content}', Log.Type.verbose)
-                await asyncio.sleep(1)
+                await asyncio.sleep(0.2)
                 await m.delete()
             elif m.author.name in args:
                 Log.log('Discord', f'Deleting: {m.author.name}: {m.content}', Log.Type.verbose)
-                await asyncio.sleep(1)
+                await asyncio.sleep(0.2)
                 await m.delete()
 
     # Status Command
