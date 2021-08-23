@@ -34,6 +34,9 @@ SOFTWARE.
 
 import asyncio
 # noinspection PyUnresolvedReferences
+import pprint
+import time
+
 from KateLib import load_json_file, Log  # IDE Error: main.py is being run from a level lower
 from discord.ext import commands
 import asyncpraw as async_praw
@@ -82,6 +85,51 @@ class Reddit(commands.Cog):
                     self.streams_registered = True
             Log.log("Reddit", "Loaded", Log.Type.verbose)
 
+    async def send_gallery(self, submission, channel):
+        count = 0
+        for item in sorted(submission.gallery_data['items'], key=lambda x: x['id']):
+            if item.get('media_id'):
+                media_id = item.get('media_id')
+                meta = submission.media_metadata.get(media_id)
+                if meta.get('e') == 'Image':
+                    source = meta.get('s')
+                    url = source.get('u')
+                    title = submission.title[:255]  # embed.title: Must be 256 or fewer in length
+                    if count > 0:
+                        title = 'Gallery Image'
+                    meme = Embed(title=title, url=f'https://www.reddit.com{submission.permalink}')
+                    meme.set_image(url=url)
+                    new_msg = await channel.send(content=None, embed=meme)
+                    if count == 0:
+                        reactions = ['👍', '👎']
+                        for emoji in reactions:
+                            await new_msg.add_reaction(emoji)
+                    count += 1
+
+    async def send_submission(self, submission, channel):
+        title = submission.title[:255]  # embed.title: Must be 256 or fewer in length
+        memes = []
+        meme = Embed(title=title, url=f'https://www.reddit.com{submission.permalink}')
+        meme.set_image(url=submission.url)
+        memes.append(meme)
+        #  Log.log('Reddit', f'({subreddit.display_name}) MemeStream: {meme.url}', None)
+        Log.log('Reddit', f'MemeStream: {meme.url}', None)
+        new_msg = await channel.send(content=None, embed=meme)
+        reactions = ['👍', '👎']
+        for emoji in reactions:
+            await new_msg.add_reaction(emoji)
+
+    @commands.command(name='reddit_debug')
+    async def reddit_debug(self, _ctx, *args):
+        submission = await self.reddit.submission(url=args[0])
+        pprint.pprint(vars(submission))
+
+    @commands.command(name='gallery_test')
+    async def gallery_test(self, ctx, *args):
+        submission = await self.reddit.submission(url=args[0])
+        if submission.gallery_data:
+            await self.send_gallery(submission, ctx.channel)
+
     async def register_stream(self, _sub):
         """Creates an event loop submission stream"""
         subreddit = await self.reddit.subreddit(_sub)
@@ -89,15 +137,11 @@ class Reddit(commands.Cog):
         async for submission in subreddit.stream.submissions(skip_existing=True, pause_after=0):
             try:
                 if submission is not None:
-                    title = submission.title[:255]  # embed.title: Must be 256 or fewer in length
-                    meme = Embed(title=title, url=f'https://www.reddit.com{submission.permalink}')
-                    meme.set_image(url=submission.url)
-                    #  Log.log('Reddit', f'({subreddit.display_name}) MemeStream: {meme.url}', None)
-                    Log.log('Reddit', f'MemeStream: {meme.url}', None)
-                    new_msg = await channel.send(content=None, embed=meme)
-                    reactions = ['👍', '👎']
-                    for emoji in reactions:
-                        await new_msg.add_reaction(emoji)
+                    if (time.time() - submission.created_utc) < 60:
+                        if submission.gallery_data:
+                            await self.send_gallery(submission, channel)
+                        else:
+                            await self.send_submission(submission, channel)
                     await asyncio.sleep(10)
             except Exception as e:
                 print(f'Exception in register_stream: {e}')
