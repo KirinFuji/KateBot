@@ -104,7 +104,7 @@ class Queue:
                 full_path = f'{self.music_home}\\{self.currentSong}'
                 if path.isfile(full_path):
                     Log.log("MusicPlayer", f"Playing Song: {self.currentSong}", None)
-                    self.source = PCMVolumeTransformer(FFmpegPCMAudio(full_path, executable=self.ffmpeg), 1.0)
+                    self.source = PCMVolumeTransformer(FFmpegPCMAudio(full_path, executable=self.ffmpeg), 0.5)
                     voice_client.play(self.source, after=lambda x: self.play_next(voice_client))
                     self.isPlaying = True
                     # await self.KateBot.set_listening(self.currentSong)  # Removed: Bot will be multi-server
@@ -285,24 +285,19 @@ class MusicPlayer(commands.Cog):
         if len(self.KateBot.voice_clients) > 0:
             if len(self.Queues[ctx.guild].songList) > 0:
                 if len(args) > 0:
-                    try:
-                        try:
-                            print(args)
-                            if 'song' == args[0]:
-                                await ctx.channel.send(f'Song: #{args[1]}, [ {self.Queues[ctx.guild].songList[int(args[1])]} ]')
-                        except ValueError as err:
-                            if err != 'invalid literal for int() with base 10':
-                                raise
-                        if 'length' == args[0]:
-                            await ctx.channel.send(f'Currently {len(self.Queues[ctx.guild].songList)}')
-                        if 'jump' == args[0]:
-                            count = int(args[1])
+                    if 'song' == args[0]:
+                        song_n = safe_cast(args[1], int)
+                        if song_n:
+                            await ctx.channel.send(f'Song: #{args[1]}, [ {self.Queues[ctx.guild].songList[song_n]} ]')
+                    if 'length' == args[0]:
+                        await ctx.channel.send(f'Currently {len(self.Queues[ctx.guild].songList)}')
+                    if 'jump' == args[0]:
+                        count = safe_cast(args[1], int)
+                        if count:
                             for i in range(0, count):
                                 self.Queues[ctx.guild].songList.pop(0)
                                 print(self.Queues[ctx.guild].songList[i])
                             await self.next_music(ctx)
-                    except IndexError:
-                        pass
 
     @commands.command(name='current', aliases=['playing'])
     @commands.guild_only()
