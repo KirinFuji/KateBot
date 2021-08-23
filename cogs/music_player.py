@@ -107,10 +107,10 @@ class Queue:
         """Sets the queues voice source volume"""
         if isinstance(self.source, PCMVolumeTransformer):
             if volume and 0 < volume <= 1.0:
-                print('Changing Volume')
+                Log.log('MusicPlayer', f'Changing Volume to {volume}', Log.Type.verbose)
                 self.source.volume = volume
             else:
-                print('Volume out of range 0-1.0')
+                Log.log('MusicPlayer', f'Volume {volume}, out of range 0-1.0', Log.Type.error)
 
     def dequeue(self, song):
         """Remove single song from the queue"""
@@ -283,7 +283,6 @@ class MusicPlayer(commands.Cog):
                         if count:
                             for i in range(0, count):
                                 self.Queues[ctx.guild].songList.pop(0)
-                                print(self.Queues[ctx.guild].songList[i])
                             await self.next_music(ctx)
 
     @commands.command(name='current', aliases=['playing'])
