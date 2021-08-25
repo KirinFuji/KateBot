@@ -32,6 +32,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import asyncio
+import pprint
 
 from discord.ext import commands
 from discord import Color, Embed
@@ -105,6 +106,22 @@ class Administration(commands.Cog):
                 Log.log('Discord', f'Deleting: {m.author.name}: {m.content}', Log.Type.verbose)
                 await asyncio.sleep(0.2)
                 await m.delete()
+
+    # Bulk delete
+    @commands.command(name='bulk_delete')
+    @commands.guild_only()
+    @commands.is_owner()
+    async def bulk_delete(self, ctx):
+        """Bulk delete 100 messages at a time (Max age of 14 days for bulk deletable messages)"""
+        messages = await ctx.channel.history(limit=100).flatten()
+        await ctx.channel.delete_messages(messages)
+
+    @commands.command(name='debug')
+    @commands.guild_only()
+    @commands.is_owner()
+    async def debug_test(self, ctx):
+        pprint.pprint(vars(ctx))
+        await ctx.message.delete()
 
     # Status Command
     @commands.command(name="status")
