@@ -33,10 +33,11 @@ SOFTWARE.
 """
 
 import asyncio
-# noinspection PyUnresolvedReferences
+
 import pprint
 import time
-
+# noinspection PyUnresolvedReferences
+import asyncprawcore
 from KateLib import load_json_file, Log  # IDE Error: main.py is being run from a level lower
 from discord.ext import commands
 import asyncpraw as async_praw
@@ -172,7 +173,7 @@ class Reddit(commands.Cog):
             self.KateBot.tasks.append(task)
         Log.log('Reddit', 'All submission streams registered! ♥', Log.Type.verbose)
 
-    @commands.Cog.listener()  # Needs a 404 exception handler asyncprawcore.exceptions.NotFound
+    @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
         """Up/Down Vote reaction listener"""
         # Ignore Self
@@ -192,12 +193,16 @@ class Reddit(commands.Cog):
                     Log.log("Discord", f'User: {payload.member} reacted to {reddit_post} with {payload.emoji}',
                             Log.Type.verbose)
                     submission = await self.reddit.submission(url=reddit_post)
-                    if payload.emoji.name == '👍':
-                        await submission.upvote()
-                        Log.log("Reddit", f'Up-Vote: {reddit_post}', None)
-                    elif payload.emoji.name == '👎':
-                        await submission.downvote()
-                        Log.log("Reddit", f'Down-Vote: {reddit_post}', None)
+                    try:
+                        if payload.emoji.name == '👍':
+                            await submission.upvote()
+                            Log.log("Reddit", f'Up-Vote: {reddit_post}', None)
+                        elif payload.emoji.name == '👎':
+                            await submission.downvote()
+                            Log.log("Reddit", f'Down-Vote: {reddit_post}', None)
+                    except asyncprawcore.exceptions.NotFound as err:
+                        Log.log('Reddit', 'Post was deleted or url changed.', Log.Type.verbose)
+
 
     @commands.command(name='meme_stream')
     @commands.guild_only()
