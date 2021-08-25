@@ -140,7 +140,7 @@ class Log:
     def create_logfile(cls):
         """Create a fresh logfile"""
         with open('logs/latest.log', 'w') as file:
-            file.writelines([f'Log initialized @ {cls.timestamp()}\n'])
+            file.write(f'Log initialized @ {cls.timestamp()}\n')
 
     @classmethod
     def init_logfile(cls):
