@@ -36,17 +36,23 @@ import asyncio
 
 import pprint
 import time
+
+import asyncpraw.models
 import asyncprawcore
-from KateLib import load_json_file, Log
+import discord
+
+import main
+from KateLib import load_json_file, Log, safe_get
 from discord.ext import commands
 import asyncpraw as async_praw
 from discord import Embed
+from discord.embeds import EmbedProxy
 
 
 class Reddit(commands.Cog):
     """AsyncPraw Reddit Cog"""
 
-    def __init__(self, KateBot):
+    def __init__(self, KateBot: main.KateBot):
         self.KateBot = KateBot
         config = load_json_file('config/reddit.json')
         self.meme_stream = config['meme_stream']
@@ -63,30 +69,8 @@ class Reddit(commands.Cog):
         self.loaded = False
         Log.log("Reddit", "Initialized", Log.Type.debug)
 
-    async def login_test(self):
-        """Checks Reddit token validity and permissions"""
-        try:
-            reddit_user = await self.reddit.user.me()
-            Log.log("Reddit", f"Logged in as {reddit_user.name} ReadOnly: {self.reddit.read_only}", None)
-            return True
-        except Exception as err:
-            Log.log("Reddit", f"Login Error: {err}", Log.Type.error)
-            return False
-
-    @commands.Cog.listener()
-    async def on_ready(self):
-        """OnReady (Runs after discord login)"""
-        if not self.loaded:
-            self.loaded = True
-            success = await self.login_test()
-            if success:
-                if self.meme_stream and not self.streams_registered:
-                    self.register_streams()
-                    self.streams_registered = True
-            Log.log("Reddit", "Loaded", Log.Type.verbose)
-
     @staticmethod
-    async def send_gallery(submission, channel):
+    async def send_gallery(submission: asyncpraw.models.Submission, channel: discord.TextChannel):
         """Method to send a gallery submission to channel"""
         count = 0
         for item in sorted(submission.gallery_data['items'], key=lambda x: x['id']):
@@ -101,7 +85,7 @@ class Reddit(commands.Cog):
                         title = 'Gallery Image'
                     meme = Embed(title=title, url=f'https://www.reddit.com{submission.permalink}')
                     meme.set_image(url=url)
-                    new_msg = await channel.send(content=None, embed=meme)
+                    new_msg = await channel.send(embed=meme)
                     if count == 0:
                         reactions = ['👍', '👎']
                         for emoji in reactions:
@@ -109,38 +93,28 @@ class Reddit(commands.Cog):
                     count += 1
 
     @staticmethod
-    async def send_submission(submission, channel):
+    async def send_submission(submission: asyncpraw.models.Submission, channel: discord.TextChannel):
         """Method to send a normal url submission to channel"""
         title = submission.title[:255]  # embed.title: Must be 256 or fewer in length
-        memes = []
         meme = Embed(title=title, url=f'https://www.reddit.com{submission.permalink}')
-        meme.set_image(url=submission.url)
-        memes.append(meme)
-        #  Log.log('Reddit', f'({subreddit.display_name}) MemeStream: {meme.url}', None)
+        if hasattr(submission, 'media') and 'reddit_video' in submission.media:
+            url = safe_get(submission.media, 'reddit_video', 'fallback_url')
+            if url:
+                content = url
+                await channel.send(embed=meme)
+                new_msg = await channel.send(content=content)
+            else:
+                Log.log('Reddit', f'send_submission error: Media attribute exists but lacks video url!', Log.Type.error)
+                return
+        else:
+            meme.set_image(url=submission.url)
+            new_msg = await channel.send(embed=meme)
         Log.log('Reddit', f'MemeStream: {meme.url}', None)
-        new_msg = await channel.send(content=None, embed=meme)
         reactions = ['👍', '👎']
         for emoji in reactions:
             await new_msg.add_reaction(emoji)
 
-    @commands.command(name='reddit_debug')
-    @commands.is_owner()
-    @commands.guild_only()
-    async def reddit_debug(self, _ctx, *args):
-        """!reddit_debug [URL] fetches a submission and dumps its object properties"""
-        submission = await self.reddit.submission(url=args[0])
-        pprint.pprint(vars(submission))
-
-    @commands.command(name='gallery_test')
-    @commands.is_owner()
-    @commands.guild_only()
-    async def gallery_test(self, ctx, *args):
-        """!gallery_test [URL] attempts to fetch a gallery submission"""
-        submission = await self.reddit.submission(url=args[0])
-        if submission.gallery_data:
-            await self.send_gallery(submission, ctx.channel)
-
-    async def register_stream(self, _sub):
+    async def register_stream(self, _sub: str):
         """Creates an event loop submission stream"""
         try:
             subreddit = await self.reddit.subreddit(_sub)
@@ -186,8 +160,18 @@ class Reddit(commands.Cog):
             self.KateBot.tasks.append(task)
         Log.log('Reddit', 'All submission streams registered! ♥', Log.Type.verbose)
 
+    async def login_test(self):
+        """Checks Reddit token validity and permissions"""
+        try:
+            reddit_user = await self.reddit.user.me()
+            Log.log("Reddit", f"Logged in as {reddit_user.name} ReadOnly: {self.reddit.read_only}", None)
+            return True
+        except Exception as err:
+            Log.log("Reddit", f"Login Error: {err}", Log.Type.error)
+            return False
+
     @commands.Cog.listener()
-    async def on_raw_reaction_add(self, payload):
+    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
         """Up/Down Vote reaction listener"""
         # Ignore Self
         if payload.user_id == self.KateBot.user.id:
@@ -215,6 +199,43 @@ class Reddit(commands.Cog):
                             Log.log("Reddit", f'Down-Vote: {reddit_post}', None)
                     except asyncprawcore.exceptions.NotFound as err:
                         Log.log('Reddit', f'Post was deleted or url changed: {err}', Log.Type.verbose)
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        """OnReady (Runs after discord login)"""
+        if not self.loaded:
+            self.loaded = True
+            success = await self.login_test()
+            if success:
+                if self.meme_stream and not self.streams_registered:
+                    self.register_streams()
+                    self.streams_registered = True
+            Log.log("Reddit", "Loaded", Log.Type.verbose)
+
+    @commands.command(name='reddit_debug')
+    @commands.is_owner()
+    @commands.guild_only()
+    async def reddit_debug(self, _ctx, *args):
+        """!reddit_debug [URL] fetches a submission and dumps its object properties"""
+        submission = await self.reddit.submission(url=args[0])
+        pprint.pprint(vars(submission))
+
+    @commands.command(name='gallery_test')
+    @commands.is_owner()
+    @commands.guild_only()
+    async def gallery_test(self, ctx, *args):
+        """!gallery_test [URL] attempts to fetch a gallery submission"""
+        submission = await self.reddit.submission(url=args[0])
+        if submission.gallery_data:
+            await self.send_submission(submission, ctx.channel)
+
+    @commands.command(name='submission_test')
+    @commands.is_owner()
+    @commands.guild_only()
+    async def submission_test(self, ctx, *args):
+        """!submission_test [URL] attempts to fetch a submission and embed its image/video"""
+        submission = await self.reddit.submission(url=args[0])
+        await self.send_submission(submission, ctx.channel)
 
     @commands.command(name='meme_stream')
     @commands.guild_only()
