@@ -138,7 +138,7 @@ class Reddit(commands.Cog):
             try:
                 if submission is not None:
                     if (time.time() - submission.created_utc) < 60:
-                        if submission.gallery_data:
+                        if hasattr(submission, 'gallery_data'):
                             await self.send_gallery(submission, channel)
                         else:
                             await self.send_submission(submission, channel)
