@@ -33,11 +33,13 @@ SOFTWARE.
 """
 
 from json import load as load_json
-from os.path import isfile
+from os import rename, listdir
+from os.path import isfile, join, getmtime
 from random import randint
 from datetime import datetime
 from termcolor import colored
 from enum import Enum
+from queue import Queue
 
 
 # Static Class example
@@ -45,10 +47,10 @@ class RandomSymbols:
     """Library of random Symbols :3"""
     Hearts = ['❤', '🧡', '💛', '💚', '💙', '💜', '🤍']
 
-    @staticmethod
-    def random_heart():
+    @classmethod
+    def random_heart(cls):
         """Why wouldn't you want random hearts?"""
-        return RandomSymbols.Hearts[randint(0, len(RandomSymbols.Hearts) - 1)]
+        return cls.Hearts[randint(0, len(cls.Hearts) - 1)]
 
 
 def safe_cast(value, __class, default=None):
@@ -119,6 +121,41 @@ class Log:
     error = True
     enabled = True
     milliseconds = False
+    max_history = 5
+
+    @classmethod
+    def rotate_logfile(cls):
+        """Renames log files to rotate latest log"""
+        number_of_files = sum(1 for item in listdir('logs/') if isfile(join('logs/', item)) and item != 'latest.log')
+        if number_of_files <= cls.max_history:
+            rename('logs/latest.log', f'logs/latest.log.{number_of_files + 1}')
+        else:
+            files = sorted([item for item in listdir('logs/') if isfile(join('logs/', item)) and item != 'latest.log'],
+                           key=lambda x: getmtime(join('logs/', x)))
+            if len(files) > 0:
+                file = files[0]
+                rename('logs/latest.log', f'logs/{file}')
+
+    @classmethod
+    def create_logfile(cls):
+        """Create a fresh logfile"""
+        with open('logs/latest.log', 'w') as file:
+            file.writelines([f'Log initialized @ {cls.timestamp()}\n'])
+
+    @classmethod
+    def init_logfile(cls):
+        """Run on startup to create and rename logs"""
+        if isfile('logs/latest.log'):
+            cls.rotate_logfile()
+            cls.create_logfile()
+        else:
+            cls.create_logfile()
+
+    @staticmethod
+    def append_log(msg):
+        """Append to the log file"""
+        with open('logs/latest.log', 'a', encoding='UTF-8') as file:
+            file.write(msg + '\n')
 
     @staticmethod
     def timestamp():
@@ -130,26 +167,36 @@ class Log:
 
     @classmethod
     def log(cls, module, message, log_type, tag="", color=None):
-        """Log an event to console (To DB in future)
-        """
+        """Log an event"""
         if log_type is None:
             log_type = cls.Type.normal
         if cls.enabled:
             if color is not None:
-                print(colored(f'[{cls.timestamp()}][{module}]{tag}: {message}', color))
+                msg = f'[{cls.timestamp()}][{module}]{tag}: {message}'
+                print(colored(msg, color))
             else:
                 if cls.verbose and log_type == cls.Type.verbose:
-                    print(colored(f'[{cls.timestamp()}][{module}]: {message}', cls.Colors.grey))
+                    msg = f'[{cls.timestamp()}][{module}]: {message}'
+                    print(colored(msg, cls.Colors.grey))
+                    cls.append_log(msg)
                     return
                 elif cls.debug and log_type == cls.Type.debug:
-                    print(colored(f'[{cls.timestamp()}][{module}][DEBUG]: {message}', cls.Colors.blue))
+                    msg = f'[{cls.timestamp()}][{module}][DEBUG]: {message}'
+                    print(colored(msg, cls.Colors.blue))
+                    cls.append_log(msg)
                     return
                 elif cls.normal and log_type == cls.Type.normal:
-                    print(f'[{cls.timestamp()}][{module}]: {message}')
+                    msg = f'[{cls.timestamp()}][{module}]: {message}'
+                    print(msg)
+                    cls.append_log(msg)
                     return
                 elif cls.warning and log_type == cls.Type.warning:
-                    print(colored(f'[{cls.timestamp()}][{module}][WARN]: {message}', cls.Colors.yellow))
+                    msg = f'[{cls.timestamp()}][{module}][WARN]: {message}'
+                    print(colored(msg, cls.Colors.yellow))
+                    cls.append_log(msg)
                     return
                 elif cls.error and log_type == cls.Type.error:
-                    print(colored(f'[{cls.timestamp()}][{module}][ERROR]: {message}', cls.Colors.red))
+                    msg = f'[{cls.timestamp()}][{module}][ERROR]: {message}'
+                    print(colored(msg, cls.Colors.red))
+                    cls.append_log(msg)
                     return

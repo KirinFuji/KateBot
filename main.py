@@ -158,6 +158,8 @@ if __name__ == '__main__':
     Log.error = Log_CFG['error']
     Log.enabled = Log_CFG['enabled']
     Log.milliseconds = Log_CFG['milliseconds']
+    Log.max_history = Log_CFG['history']
+    Log.init_logfile()
 
     # KateBot Setup
     Cogs = load_json_file('config/cogs.json')
