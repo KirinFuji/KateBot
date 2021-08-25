@@ -124,12 +124,16 @@ class Reddit(commands.Cog):
             await new_msg.add_reaction(emoji)
 
     @commands.command(name='reddit_debug')
+    @commands.is_owner()
+    @commands.guild_only()
     async def reddit_debug(self, _ctx, *args):
         """!reddit_debug [URL] fetches a submission and dumps its object properties"""
         submission = await self.reddit.submission(url=args[0])
         pprint.pprint(vars(submission))
 
     @commands.command(name='gallery_test')
+    @commands.is_owner()
+    @commands.guild_only()
     async def gallery_test(self, ctx, *args):
         """!gallery_test [URL] attempts to fetch a gallery submission"""
         submission = await self.reddit.submission(url=args[0])
