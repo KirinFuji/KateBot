@@ -33,9 +33,10 @@ SOFTWARE.
 """
 from discord import Embed
 from discord.ext import commands
-from KateLib import load_json_file, RandomSymbols, Log
+from KateLib import Log
 from re import search
 from aiohttp import ClientSession
+
 
 class Misc(commands.Cog):
     """Basic cog template"""

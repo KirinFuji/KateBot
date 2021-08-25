@@ -37,7 +37,7 @@ import asyncio
 import pprint
 import time
 import asyncprawcore
-from KateLib import load_json_file, Log  # IDE Error: main.py is being run from a level lower
+from KateLib import load_json_file, Log
 from discord.ext import commands
 import asyncpraw as async_praw
 from discord import Embed

@@ -36,7 +36,7 @@ SOFTWARE.
 
 from json import loads
 from discord.ext import commands
-from KateLib import load_json_file, safe_get, Log  # IDE Error: main.py is being run from a level lower
+from KateLib import load_json_file, safe_get, Log
 import aiohttp
 import asyncio
 

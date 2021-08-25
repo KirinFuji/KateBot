@@ -36,7 +36,7 @@ import pprint
 
 from discord.ext import commands
 from discord import Color, Embed
-from KateLib import RandomSymbols, Log  # IDE Error: main.py is being run from a level lower
+from KateLib import RandomSymbols, Log
 
 
 class CustomHelp(commands.MinimalHelpCommand):
@@ -75,7 +75,7 @@ class Administration(commands.Cog):
             await ctx.channel.send(f'Bye! {RandomSymbols.random_heart()}')
             await self.KateBot.close()
         except RuntimeError as err:
-            Log.log("Discord", f"{err}")
+            Log.log("Discord", f"{err}", Log.Type.error)
         Log.log("Discord", "Logging Out!", None)
 
     # Restart Command
@@ -86,7 +86,7 @@ class Administration(commands.Cog):
         try:
             await self.KateBot.close()
         except RuntimeError as err:
-            Log.log("Discord", f"{err}")
+            Log.log("Discord", f"{err}", Log.Type.error)
         Log.log("Discord", "Logging Out!", None)
 
     # Cleanup Command
@@ -119,6 +119,7 @@ class Administration(commands.Cog):
     @commands.guild_only()
     @commands.is_owner()
     async def debug_test(self, ctx):
+        """Debug command to dump context"""
         pprint.pprint(vars(ctx))
         await ctx.message.delete()
 
