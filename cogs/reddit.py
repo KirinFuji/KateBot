@@ -85,7 +85,9 @@ class Reddit(commands.Cog):
                     self.streams_registered = True
             Log.log("Reddit", "Loaded", Log.Type.verbose)
 
-    async def send_gallery(self, submission, channel):
+    @staticmethod
+    async def send_gallery(submission, channel):
+        """Method to send a gallery submission to channel"""
         count = 0
         for item in sorted(submission.gallery_data['items'], key=lambda x: x['id']):
             if item.get('media_id'):
@@ -106,7 +108,9 @@ class Reddit(commands.Cog):
                             await new_msg.add_reaction(emoji)
                     count += 1
 
-    async def send_submission(self, submission, channel):
+    @staticmethod
+    async def send_submission(submission, channel):
+        """Method to send a normal url submission to channel"""
         title = submission.title[:255]  # embed.title: Must be 256 or fewer in length
         memes = []
         meme = Embed(title=title, url=f'https://www.reddit.com{submission.permalink}')
@@ -121,21 +125,23 @@ class Reddit(commands.Cog):
 
     @commands.command(name='reddit_debug')
     async def reddit_debug(self, _ctx, *args):
+        """!reddit_debug [URL] fetches a submission and dumps its object properties"""
         submission = await self.reddit.submission(url=args[0])
         pprint.pprint(vars(submission))
 
     @commands.command(name='gallery_test')
     async def gallery_test(self, ctx, *args):
+        """!gallery_test [URL] attempts to fetch a gallery submission"""
         submission = await self.reddit.submission(url=args[0])
         if submission.gallery_data:
             await self.send_gallery(submission, ctx.channel)
 
     async def register_stream(self, _sub):
         """Creates an event loop submission stream"""
-        subreddit = await self.reddit.subreddit(_sub)
-        channel = self.KateBot.get_channel(self.meme_stream_channel)
-        async for submission in subreddit.stream.submissions(skip_existing=True, pause_after=0):
-            try:
+        try:
+            subreddit = await self.reddit.subreddit(_sub)
+            channel = self.KateBot.get_channel(self.meme_stream_channel)
+            async for submission in subreddit.stream.submissions(skip_existing=True, pause_after=0):
                 if submission is not None:
                     if (time.time() - submission.created_utc) < 60:
                         if hasattr(submission, 'gallery_data'):
@@ -143,8 +149,12 @@ class Reddit(commands.Cog):
                         else:
                             await self.send_submission(submission, channel)
                     await asyncio.sleep(10)
-            except Exception as e:
-                print(f'Exception in register_stream: {e}')
+        except asyncprawcore.exceptions.ServerError as err:
+            Log.log('Reddit', f'Encountered ServerError: {err}', Log.Type.error)
+            raise
+        except asyncprawcore.exceptions.AsyncPrawcoreException as err:
+            Log.log('Reddit', f'Encountered Unexpected Exception: {err}', Log.Type.error)
+            raise
 
     def register_streams(self):
         """Loop that spawns a single event loop task with all subreddits combined."""
@@ -200,8 +210,7 @@ class Reddit(commands.Cog):
                             await submission.downvote()
                             Log.log("Reddit", f'Down-Vote: {reddit_post}', None)
                     except asyncprawcore.exceptions.NotFound as err:
-                        Log.log('Reddit', 'Post was deleted or url changed.', Log.Type.verbose)
-
+                        Log.log('Reddit', f'Post was deleted or url changed: {err}', Log.Type.verbose)
 
     @commands.command(name='meme_stream')
     @commands.guild_only()
