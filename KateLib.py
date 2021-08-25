@@ -33,7 +33,7 @@ SOFTWARE.
 """
 
 from json import load as load_json
-from os import rename, listdir
+from os import rename, listdir, remove
 from os.path import isfile, join, getmtime
 from random import randint
 from datetime import datetime
@@ -134,6 +134,7 @@ class Log:
                            key=lambda x: getmtime(join('logs/', x)))
             if len(files) > 0:
                 file = files[0]
+                remove(f'logs/{file}')
                 rename('logs/latest.log', f'logs/{file}')
 
     @classmethod

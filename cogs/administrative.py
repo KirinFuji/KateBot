@@ -123,6 +123,16 @@ class Administration(commands.Cog):
         pprint.pprint(vars(ctx))
         await ctx.message.delete()
 
+    @commands.command(name='msgdebug')
+    @commands.guild_only()
+    @commands.is_owner()
+    async def msg_debug_test(self, ctx):
+        """Debug command to dump context"""
+        message = ctx.channel.fetch_message()
+        pprint.pprint(vars(ctx))
+        await ctx.message.delete()
+
+
     # Status Command
     @commands.command(name="status")
     @commands.guild_only()

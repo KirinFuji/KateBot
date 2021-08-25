@@ -31,9 +31,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-
+import discord
 from discord.ext import commands
 from discord.utils import get
+
+import main
 from KateLib import load_json_file, Log
 
 
@@ -43,7 +45,7 @@ class ReactionRoles(commands.Cog):
     This cog contains the code for parsing reactions.json and acting on incoming reactions.
     """
 
-    def __init__(self, KateBot):
+    def __init__(self, KateBot: main.KateBot):
         self.reactions = load_json_file('config/reactions.json')
         self.KateBot = KateBot
         self.enabled = True
@@ -58,14 +60,14 @@ class ReactionRoles(commands.Cog):
             Log.log("ReactionRoles", "Loaded", Log.Type.verbose)
 
     @staticmethod
-    async def reaction_role(payload, emoji, role_name, remove=False):
+    async def reaction_role(payload: discord.RawReactionActionEvent, emoji: discord.PartialEmoji,
+                            role_name, remove=False):
         """Primary Logic flow for adding/removing roles"""
         Log.log("ReactionRoles", f"\n  -Emoji: {payload.emoji.name} | {emoji}"
                                  f"\n  -Role: {role_name}"
                                  f"\n  -Remove: {remove}"
                                  f"\n  -Member: {payload.member}", Log.Type.debug)
         if payload.emoji.name == emoji:
-
             role = get(payload.member.guild.roles, name=role_name)
             if role is not None:
                 if role not in payload.member.roles:
@@ -80,7 +82,7 @@ class ReactionRoles(commands.Cog):
                 raise TypeError(f"({role_name}) not found in guild ({payload.member.guild})")
 
     @commands.Cog.listener()
-    async def on_raw_reaction_add(self, payload):
+    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
         """Reaction Roles"""
         # Reactions Loop (reactions.json)
         for reaction in self.reactions:
@@ -88,7 +90,7 @@ class ReactionRoles(commands.Cog):
                 await self.reaction_role(payload, reaction["emoji"], reaction["role_name"])
 
     @commands.Cog.listener()
-    async def on_raw_reaction_remove(self, payload):
+    async def on_raw_reaction_remove(self, payload: discord.RawReactionActionEvent):
         """Gets called when a discord reaction is removed"""
         if payload.user_id == self.KateBot.user.id:
             return
