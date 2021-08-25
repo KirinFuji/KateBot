@@ -181,6 +181,7 @@ class MusicPlayer(commands.Cog):
     @commands.guild_only()
     async def join_voice(self, ctx, *args):
         """!Join [channel_id] - Joins a discord voice channel"""
+        await ctx.message.delete()
         Log.log("MusicPlayer", f"Joining Channel: {args[0]}", Log.Type.verbose)
         channel = self.KateBot.get_channel(int(args[0]))
         await channel.connect(timeout=60.0, reconnect=True)
@@ -193,6 +194,7 @@ class MusicPlayer(commands.Cog):
     @commands.guild_only()
     async def leave_voice(self, ctx):
         """Leaves all connected voice channels"""
+        await ctx.message.delete()
         voice_client = self.get_guild_voice_client(ctx)
         if voice_client:
             await voice_client.disconnect()
@@ -202,6 +204,7 @@ class MusicPlayer(commands.Cog):
     @commands.guild_only()
     async def play_music(self, ctx, *args):
         """!play <filename> plays an mp3 from disk"""
+        await ctx.message.delete()
         if len(args) > 0:
             mp3 = args[0]
             if len(self.KateBot.voice_clients) > 0:
@@ -213,6 +216,7 @@ class MusicPlayer(commands.Cog):
     @commands.guild_only()
     async def random_music(self, ctx, *args):
         """Generates a queue of 5 random songs"""
+        await ctx.message.delete()
         if len(self.KateBot.voice_clients) > 0:
             count = 5
             if len(args) > 0:
@@ -227,6 +231,7 @@ class MusicPlayer(commands.Cog):
     @commands.guild_only()
     async def stop_music(self, ctx):
         """Stops playback and empties queue"""
+        await ctx.message.delete()
         voice_client = self.get_guild_voice_client(ctx)
         if voice_client:
             self.Queues[ctx.guild].stop(voice_client)
@@ -235,6 +240,7 @@ class MusicPlayer(commands.Cog):
     @commands.guild_only()
     async def next_music(self, ctx):
         """Skips current song and plays next in queue"""
+        await ctx.message.delete()
         voice_client = self.get_guild_voice_client(ctx)
         if voice_client:
             self.Queues[ctx.guild].next_track(voice_client)
@@ -243,6 +249,7 @@ class MusicPlayer(commands.Cog):
     @commands.guild_only()
     async def pause_music(self, ctx):
         """Pauses music playback"""
+        await ctx.message.delete()
         voice_client = self.get_guild_voice_client(ctx)
         if voice_client:
             voice_client.pause()
@@ -251,6 +258,7 @@ class MusicPlayer(commands.Cog):
     @commands.guild_only()
     async def resume_music(self, ctx):
         """Resumes music playback"""
+        await ctx.message.delete()
         voice_client = self.get_guild_voice_client(ctx)
         if voice_client:
             voice_client.resume()
@@ -259,6 +267,7 @@ class MusicPlayer(commands.Cog):
     @commands.guild_only()
     async def change_volume(self, ctx, *args):
         """!volume [0-1.0] change volume 0-100% default: 50%"""
+        await ctx.message.delete()
         #  value = int(args[0]) if args[0].isdecimal() else None
         value = safe_cast(args[0], float)
         if value:
@@ -269,6 +278,7 @@ class MusicPlayer(commands.Cog):
     async def queue_cmd(self, ctx, *args):
         """!queue [command], [*args] - (length, *jump, *song)
            Provides sub commands for inspecting and managing queue"""
+        await ctx.message.delete()
         if len(self.KateBot.voice_clients) > 0:
             if len(self.Queues[ctx.guild].songList) > 0:
                 if len(args) > 0:
@@ -289,6 +299,7 @@ class MusicPlayer(commands.Cog):
     @commands.guild_only()
     async def current_song(self, ctx):
         """Informs user of currently playing track"""
+        await ctx.message.delete()
         voice_client = self.get_guild_voice_client(ctx)
         if voice_client:
             if voice_client.is_playing():
@@ -299,6 +310,7 @@ class MusicPlayer(commands.Cog):
     @commands.guild_only()
     async def next_song(self, ctx):
         """Informs user of currently playing track"""
+        await ctx.message.delete()
         voice_client = self.get_guild_voice_client(ctx)
         if voice_client:
             if voice_client.is_playing():
