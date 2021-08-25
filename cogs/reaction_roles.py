@@ -34,8 +34,7 @@ SOFTWARE.
 
 from discord.ext import commands
 from discord.utils import get
-# noinspection PyUnresolvedReferences
-from KateLib import load_json_file, Log  # IDE Error: main.py is being run from a level lower
+from KateLib import load_json_file, Log
 
 
 class ReactionRoles(commands.Cog):

@@ -33,8 +33,7 @@ SOFTWARE.
 """
 from discord import Embed
 from discord.ext import commands
-# noinspection PyUnresolvedReferences
-from KateLib import load_json_file, RandomSymbols, Log  # IDE Error: main.py is being run from a level lower
+from KateLib import load_json_file, RandomSymbols, Log
 from re import search
 from aiohttp import ClientSession
 

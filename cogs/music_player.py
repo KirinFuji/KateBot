@@ -38,9 +38,7 @@ from discord import FFmpegPCMAudio, PCMVolumeTransformer
 from os import listdir, path
 from os.path import isfile, join
 from random import randint
-# noinspection PyUnresolvedReferences
-from KateLib import load_json_file, Log, safe_cast  # IDE Error: main.py is being run from a level lower
-# noinspection PyUnresolvedReferences
+from KateLib import load_json_file, Log, safe_cast
 from KateLib import RandomSymbols as Rs
 
 

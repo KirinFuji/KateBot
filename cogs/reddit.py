@@ -36,7 +36,6 @@ import asyncio
 
 import pprint
 import time
-# noinspection PyUnresolvedReferences
 import asyncprawcore
 from KateLib import load_json_file, Log  # IDE Error: main.py is being run from a level lower
 from discord.ext import commands

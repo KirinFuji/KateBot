@@ -36,7 +36,6 @@ import pprint
 
 from discord.ext import commands
 from discord import Color, Embed
-# noinspection PyUnresolvedReferences
 from KateLib import RandomSymbols, Log  # IDE Error: main.py is being run from a level lower
 
 
