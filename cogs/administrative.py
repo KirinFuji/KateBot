@@ -34,6 +34,7 @@ SOFTWARE.
 import asyncio
 import pprint
 
+import discord.ext.commands
 from discord.ext import commands
 from discord import Color, Embed
 from KateLib import RandomSymbols, Log
@@ -69,7 +70,7 @@ class Administration(commands.Cog):
     # Shutdown Command
     @commands.command(name="shutdown", aliases=["quit", "logout"])
     @commands.has_permissions(administrator=True)
-    async def shutdown(self, ctx):
+    async def shutdown(self, ctx: discord.ext.commands.Context):
         """Shuts down KateBot! (Admin Only)"""
         try:
             await ctx.channel.send(f'Bye! {RandomSymbols.random_heart()}')
@@ -81,7 +82,7 @@ class Administration(commands.Cog):
     # Restart Command
     @commands.command(name="restart")
     @commands.has_permissions(administrator=True)
-    async def restart(self, _ctx):
+    async def restart(self, _ctx: discord.ext.commands.Context):
         """Restarts KateBot (Admin Only)"""
         try:
             await self.KateBot.close()
@@ -93,7 +94,7 @@ class Administration(commands.Cog):
     @commands.command(name='cleanup', aliases=['clean', 'scrub'])
     @commands.guild_only()
     @commands.is_owner()
-    async def cleanup(self, ctx, *args):
+    async def cleanup(self, ctx: discord.ext.commands.Context, *args):
         """!Cleanup [all|<username>] Starts deleting messages in the channel the command is run, up to 200."""
         messages = await ctx.channel.history(limit=200).flatten()
         for m in messages:
@@ -110,7 +111,7 @@ class Administration(commands.Cog):
     @commands.command(name='bulk_delete')
     @commands.guild_only()
     @commands.is_owner()
-    async def bulk_delete(self, ctx):
+    async def bulk_delete(self, ctx: discord.ext.commands.Context):
         """Bulk delete 100 messages at a time (Max age of 14 days for bulk deletable messages)"""
         messages = await ctx.channel.history(limit=100).flatten()
         await ctx.channel.delete_messages(messages)
@@ -118,7 +119,7 @@ class Administration(commands.Cog):
     @commands.command(name='debug')
     @commands.guild_only()
     @commands.is_owner()
-    async def debug_test(self, ctx):
+    async def debug_test(self, ctx: discord.ext.commands.Context):
         """Debug command to dump context"""
         pprint.pprint(vars(ctx))
         await ctx.message.delete()
@@ -126,17 +127,19 @@ class Administration(commands.Cog):
     @commands.command(name='msgdebug')
     @commands.guild_only()
     @commands.is_owner()
-    async def msg_debug_test(self, ctx):
+    async def msg_debug_test(self, ctx: discord.ext.commands.Context, *args):
         """Debug command to dump context"""
-        message = ctx.channel.fetch_message()
-        pprint.pprint(vars(ctx))
+        message = await ctx.fetch_message(args[0])
+        pprint.pprint(dir(message))
+        print(f"Type:{message.type}")
+        print(f"Embeds:{message.embeds}")
+        pprint.pprint(message.embeds[0].to_dict())
         await ctx.message.delete()
-
 
     # Status Command
     @commands.command(name="status")
     @commands.guild_only()
-    async def status(self, ctx):
+    async def status(self, ctx: discord.ext.commands.Context):
         """Is the bot still alive command."""
         await ctx.channel.send(f'I\'m still here, {ctx.author.name}! {RandomSymbols.random_heart()}')
 
