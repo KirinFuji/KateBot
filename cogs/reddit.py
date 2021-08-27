@@ -70,7 +70,7 @@ class Reddit(commands.Cog):
         Log.log("Reddit", "Initialized", Log.Type.debug)
 
     @staticmethod
-    async def send_gallery(submission: asyncpraw.models.Submission, channel: discord.TextChannel):
+    async def send_gallery_old(submission: asyncpraw.models.Submission, channel: discord.TextChannel):
         """Method to send a gallery submission to channel"""
         count = 0
         for item in sorted(submission.gallery_data['items'], key=lambda x: x['id']):
@@ -93,22 +93,41 @@ class Reddit(commands.Cog):
                     count += 1
 
     @staticmethod
-    async def send_submission(submission: asyncpraw.models.Submission, channel: discord.TextChannel):
+    async def send_gallery(submission: asyncpraw.models.Submission, channel: discord.TextChannel):
+        """Method to send a gallery submission to channel"""
+        embeds = []
+        count = 0
+        for item in sorted(submission.gallery_data['items'], key=lambda x: x['id']):
+            if item.get('media_id'):
+                media_id = item.get('media_id')
+                meta = submission.media_metadata.get(media_id)
+                if meta.get('e') == 'Image':
+                    source = meta.get('s')
+                    url = source.get('u')
+                    title = submission.title[:255]  # embed.title: Must be 256 or fewer in length
+                    if count > 0:
+                        title = 'Gallery Image'
+                    meme = Embed(title=title, url=f'https://www.reddit.com{submission.permalink}')
+                    meme.set_image(url=url)
+                    embeds.append(meme)
+                    count += 1
+        msg = await channel.send(embeds=embeds)
+        reactions = ['👍', '👎']
+        for emoji in reactions:
+            await msg.add_reaction(emoji)
+
+    @staticmethod
+    async def send_submission(submission, channel):
         """Method to send a normal url submission to channel"""
         title = submission.title[:255]  # embed.title: Must be 256 or fewer in length
         meme = Embed(title=title, url=f'https://www.reddit.com{submission.permalink}')
-        if hasattr(submission, 'media') and 'reddit_video' in submission.media:
+        if hasattr(submission, 'media') and submission.media and 'reddit_video' in submission.media:
             url = safe_get(submission.media, 'reddit_video', 'fallback_url')
-            if url:
-                content = url
-                await channel.send(embed=meme)
-                new_msg = await channel.send(content=content)
-            else:
-                Log.log('Reddit', f'send_submission error: Media attribute exists but lacks video url!', Log.Type.error)
-                return
+            await channel.send(embed=meme)
+            new_msg = await channel.send(content=url)
         else:
             meme.set_image(url=submission.url)
-            new_msg = await channel.send(embed=meme)
+            new_msg = await channel.send(content=None, embed=meme)
         Log.log('Reddit', f'MemeStream: {meme.url}', None)
         reactions = ['👍', '👎']
         for emoji in reactions:
@@ -123,7 +142,10 @@ class Reddit(commands.Cog):
                 if submission is not None:
                     if (time.time() - submission.created_utc) < 60:
                         if hasattr(submission, 'gallery_data'):
-                            await self.send_gallery(submission, channel)
+                            if self.KateBot.modified_discord_lib:
+                                await self.send_gallery(submission, channel)
+                            else:
+                                await self.send_gallery_old(submission, channel)
                         else:
                             await self.send_submission(submission, channel)
                     await asyncio.sleep(10)
@@ -227,7 +249,7 @@ class Reddit(commands.Cog):
         """!gallery_test [URL] attempts to fetch a gallery submission"""
         submission = await self.reddit.submission(url=args[0])
         if submission.gallery_data:
-            await self.send_submission(submission, ctx.channel)
+            await self.send_gallery(submission, ctx.channel)
 
     @commands.command(name='submission_test')
     @commands.is_owner()
