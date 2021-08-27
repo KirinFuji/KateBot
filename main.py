@@ -103,8 +103,12 @@ class KateBot(commands.Bot):
                               case_insensitive=config['case_insensitive'],
                               intents=intent)
         # Initialize additional objects
-
         self.tasks = []
+
+        # Set to true if you have my modified discord.py to allow multi-embeds
+        self.modified_discord_lib = False
+        # This will be removed once discord.py updates to version 1.7.4
+
         Log.log("KateBot", "Initialized", Log.Type.debug)
 
     async def on_ready(self):
