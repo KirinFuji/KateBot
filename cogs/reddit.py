@@ -48,6 +48,23 @@ import asyncpraw as async_praw
 from discord import Embed
 from discord.embeds import EmbedProxy
 
+import logging
+
+
+class MyHandler(logging.StreamHandler):
+    def __init__(self):
+        super().__init__()
+
+    def emit(self, record: logging.LogRecord):
+        msg = self.format(record)
+        Log.log('Reddit', msg, Log.Type.debug)
+
+handler = MyHandler()
+handler.setLevel(logging.DEBUG)
+for logger_name in ("asyncpraw", "asyncprawcore"):
+    logger = logging.getLogger(logger_name)
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
 
 class Reddit(commands.Cog):
     """AsyncPraw Reddit Cog"""
@@ -148,7 +165,7 @@ class Reddit(commands.Cog):
                                 await self.send_gallery_old(submission, channel)
                         else:
                             await self.send_submission(submission, channel)
-                    await asyncio.sleep(10)
+                await asyncio.sleep(10)
         except asyncprawcore.exceptions.ServerError as err:
             Log.log('Reddit', f'Encountered ServerError: {err}', Log.Type.error)
             raise
