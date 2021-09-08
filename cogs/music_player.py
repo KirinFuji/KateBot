@@ -136,7 +136,7 @@ class Queue:
         only_files = [f for f in listdir(self.music_home) if isfile(join(self.music_home, f)) and f.endswith(".mp3")]
         song_list = []
         for i in range(count):
-            song_list.append(only_files[randint(0, len(only_files))])
+            song_list.append(only_files[randint(0, (len(only_files) - 1))])
         return song_list
 
 
@@ -316,7 +316,21 @@ class MusicPlayer(commands.Cog):
                     track = self.Queues[ctx.guild].songList[1]
                     await ctx.channel.send(f"Next up: [ {track.replace('.mp3', '')} ]! {Rs.random_heart()}")
 
+    @commands.command(name='favorite')
+    @commands.guild_only()
+    async def favorite_song(self, ctx):
+        """Append to list of favorite songs"""
+        await ctx.message.delete()
+        voice_client = self.get_guild_voice_client(ctx)
+        if voice_client:
+            if voice_client.is_playing():
+                if len(self.Queues[ctx.guild].songList) > 0:
+                    track = self.Queues[ctx.guild].currentSong
+                    with open('config/favorites.log', 'a', encoding='UTF-8') as file:
+                        file.write(track + '\n')
+
 
 def setup(KateBot):
     """Add cog to bot"""
     KateBot.add_cog(MusicPlayer(KateBot))
+
