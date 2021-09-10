@@ -150,10 +150,21 @@ class Reddit(commands.Cog):
         for emoji in reactions:
             await new_msg.add_reaction(emoji)
 
-    async def register_stream_cb(self, _sub: str):
+    def stream_canceled_cb(self):
+        """Debug Logging"""
+        Log.log('Reddit', f'RedditStream-Task successfully canceled.', Log.Type.debug)
 
-    async def register_stream(self, _sub: str):
+    async def cancel_stream(self):
+        """Searches for and cancels reddit event loops"""
+        tasks = asyncio.all_tasks(self.KateBot.loop)
+        for task in tasks:
+            if task.get_coro().__name__ == 'reddit_stream':
+                task.add_done_callback(self.stream_canceled_cb)
+                task.cancel()
+
+    async def reddit_stream(self, _sub: str):
         """Creates an event loop submission stream"""
+        task = asyncio.current_task(self.KateBot.loop)
         try:
             try:
                 subreddit = await self.reddit.subreddit(_sub)
@@ -172,7 +183,7 @@ class Reddit(commands.Cog):
                                     await self.send_submission(submission, channel)
                         await asyncio.sleep(10)
                     except asyncprawcore.exceptions.AsyncPrawcoreException as err:
-                        Log.log('Reddit', f'Encountered Unexpected AsyncPrawcoreException: {err}', Log.Type.error)
+                        Log.log('Reddit', f'Encountered Unexpected AsyncPrawCoreException: {err}', Log.Type.error)
                         self.register_streams()
                         break
                     except asyncprawcore.exceptions.ServerError as err:
@@ -181,10 +192,10 @@ class Reddit(commands.Cog):
                         break
             except Exception as err:
                 Log.log('Reddit', f'Encountered Unexpected Exception: {err}', Log.Type.error)
+                raise
 
         finally:
             Log.log('Reddit', 'RedditStream-Task destroyed.', Log.Type.verbose)
-            task = asyncio.current_task()
             try:
                 self.KateBot.tasks.remove(task)
             except ValueError:
@@ -202,8 +213,8 @@ class Reddit(commands.Cog):
                 subs_s += sub + "+"
             i += 1
 
-        task = self.KateBot.loop.create_task(self.register_stream(subs_s))
-        task.set_name('reddit')
+        task = self.KateBot.loop.create_task(self.reddit_stream(subs_s))
+        task.set_name('RedditStream-Task')
         self.KateBot.tasks.append(task)
         Log.log('Reddit', 'All submission streams registered! ♥', Log.Type.verbose)
 
@@ -211,7 +222,7 @@ class Reddit(commands.Cog):
         """Loop that spawns an event loop task for each subreddit."""
         for sub in self.subs:
             Log.log('Reddit', f'Registering MemeStream (/r/{sub})', None)
-            task = self.KateBot.loop.create_task(self.register_stream(sub))
+            task = self.KateBot.loop.create_task(self.reddit_stream(sub))
             task.set_name(sub)
             self.KateBot.tasks.append(task)
         Log.log('Reddit', 'All submission streams registered! ♥', Log.Type.verbose)
