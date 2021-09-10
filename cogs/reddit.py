@@ -150,28 +150,45 @@ class Reddit(commands.Cog):
         for emoji in reactions:
             await new_msg.add_reaction(emoji)
 
+    async def register_stream_cb(self, _sub: str):
+
     async def register_stream(self, _sub: str):
         """Creates an event loop submission stream"""
         try:
-            subreddit = await self.reddit.subreddit(_sub)
-            channel = self.KateBot.get_channel(self.meme_stream_channel)
-            async for submission in subreddit.stream.submissions(skip_existing=True, pause_after=0):
-                if submission is not None:
-                    if (time.time() - submission.created_utc) < 60:
-                        if hasattr(submission, 'gallery_data'):
-                            if self.KateBot.modified_discord_lib:
-                                await self.send_gallery(submission, channel)
-                            else:
-                                await self.send_gallery_old(submission, channel)
-                        else:
-                            await self.send_submission(submission, channel)
-                await asyncio.sleep(10)
-        except asyncprawcore.exceptions.ServerError as err:
-            Log.log('Reddit', f'Encountered ServerError: {err}', Log.Type.error)
-            raise
-        except asyncprawcore.exceptions.AsyncPrawcoreException as err:
-            Log.log('Reddit', f'Encountered Unexpected Exception: {err}', Log.Type.error)
-            raise
+            try:
+                subreddit = await self.reddit.subreddit(_sub)
+                channel = self.KateBot.get_channel(self.meme_stream_channel)
+                Log.log('Reddit', 'Creating RedditStream-Task', Log.Type.verbose)
+                async for submission in subreddit.stream.submissions(skip_existing=True, pause_after=0):
+                    try:
+                        if submission is not None:
+                            if (time.time() - submission.created_utc) < 60:
+                                if hasattr(submission, 'gallery_data'):
+                                    if self.KateBot.modified_discord_lib:
+                                        await self.send_gallery(submission, channel)
+                                    else:
+                                        await self.send_gallery_old(submission, channel)
+                                else:
+                                    await self.send_submission(submission, channel)
+                        await asyncio.sleep(10)
+                    except asyncprawcore.exceptions.AsyncPrawcoreException as err:
+                        Log.log('Reddit', f'Encountered Unexpected AsyncPrawcoreException: {err}', Log.Type.error)
+                        self.register_streams()
+                        break
+                    except asyncprawcore.exceptions.ServerError as err:
+                        Log.log('Reddit', f'Encountered ServerError: {err}', Log.Type.error)
+                        self.register_streams()
+                        break
+            except Exception as err:
+                Log.log('Reddit', f'Encountered Unexpected Exception: {err}', Log.Type.error)
+
+        finally:
+            Log.log('Reddit', 'RedditStream-Task destroyed.', Log.Type.verbose)
+            task = asyncio.current_task()
+            try:
+                self.KateBot.tasks.remove(task)
+            except ValueError:
+                pass
 
     def register_streams(self):
         """Loop that spawns a single event loop task with all subreddits combined."""
