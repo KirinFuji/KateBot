@@ -35,6 +35,7 @@ SOFTWARE.
 # NOTICE #
 # PyNaCl library needed in order to use MusicPlayer
 from os.path import isdir
+from os import mkdir
 import discord
 from discord.ext import commands
 from sqlalchemy import create_engine
@@ -137,13 +138,16 @@ class KateBot(commands.Bot):
 
 if __name__ == '__main__':
     # Check for config/ files, if missing, create defaults
+    if not isdir('logs/'):
+        mkdir('logs/')
+
     if not isdir('config/'):
         try:
             with suppress(FileExistsError):
                 copytree('config-samples', 'config')
+                print("Config Files Generated @ config/ please fill them out!")
         except OSError as err:
             print(f"Error Creating Config Directory: {err}")
-        print("Config Files Generated @ config/ please fill them out!")
         exit(1)
 
     # SQL Alchemy Setup
