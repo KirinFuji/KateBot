@@ -59,12 +59,15 @@ class MyHandler(logging.StreamHandler):
         msg = self.format(record)
         Log.log('Reddit', msg, Log.Type.debug)
 
-handler = MyHandler()
-handler.setLevel(logging.DEBUG)
-for logger_name in ("asyncpraw", "asyncprawcore"):
-    logger = logging.getLogger(logger_name)
-    logger.setLevel(logging.DEBUG)
-    logger.addHandler(handler)
+
+def enable_logging():
+    handler = MyHandler()
+    handler.setLevel(logging.DEBUG)
+    for logger_name in ("asyncpraw", "asyncprawcore"):
+        logger = logging.getLogger(logger_name)
+        logger.setLevel(logging.DEBUG)
+        logger.addHandler(handler)
+
 
 class Reddit(commands.Cog):
     """AsyncPraw Reddit Cog"""
@@ -182,6 +185,10 @@ class Reddit(commands.Cog):
                                 else:
                                     await self.send_submission(submission, channel)
                         await asyncio.sleep(10)
+                    except asyncprawcore.RequestException as err:
+                        Log.log('Reddit', f'Encountered Unexpected RequestException: {err}', Log.Type.error)
+                        self.register_streams()
+                        break
                     except asyncprawcore.exceptions.AsyncPrawcoreException as err:
                         Log.log('Reddit', f'Encountered Unexpected AsyncPrawCoreException: {err}', Log.Type.error)
                         self.register_streams()
